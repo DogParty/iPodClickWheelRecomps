@@ -1,0 +1,16 @@
+# Title -> name entry ("A", confirmed) -> main menu -> Statistics (a page) -> Menu to leave it.
+# The screenshots are before the Menu press and after it: leaving a page must change the picture.
+200: select
+300: wheel +240
+400: wheel +240
+500: wheel +24
+800: select
+1100: select
+1500: select
+2000: wheel +24
+2400: select
+3000: shot
+3200: menu
+3800: shot
+4400: shot
+4500: quit

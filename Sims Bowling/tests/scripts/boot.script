@@ -1,0 +1,2 @@
+# A silent boot: every file operation is done by frame 327 and the main menu is drawn by 500.
+600: quit

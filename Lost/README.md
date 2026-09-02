@@ -1,0 +1,460 @@
+# Lost — native recompilation and decompilation
+
+A port of the iPod click-wheel game *Lost* (`Lost_1_1_2917525.bin`, 2008) to modern machines.
+The game is first **statically recompiled** — every ARM function becomes a C++ function that
+runs the same instructions on a small CPU-state struct — so it runs natively from day one.
+Functions are then **hand-decompiled** one at a time into real, named, readable C++, each swap
+proven against the recompiled version. The iPod's application frameworks (OpenGL ES, audio,
+file I/O, the click wheel, the music library) are reimplemented as a host library, `libeapp`,
+behind plain C++ interfaces in `src/framework/` that the game calls directly — no registers, no
+ordinals.
+
+This is the second title to go through this process. The first, *Mini Golf*
+(`../Mini Golf/`), is finished, and its runtime, emitter, platform layer and framework
+interfaces are the reason this one starts where it does. `PLAN.md` says exactly what was
+inherited, what the copy costs, and — more usefully — the seven places where Lost is not Mini
+Golf and the machinery had to grow.
+
+The goal is source that people can read: every function named for what it does, every
+non-obvious line explained, every behaviour traceable to where it was established. The code
+quality rules are `../Mini Golf/PLAN.md` § "Code quality", unchanged; read them before
+contributing.
+
+## Layout
+
+```
+PLAN.md                  the plan of record: what Lost is, what it inherits, the schedule
+README.md                this file
+CMakeLists.txt           build; targets `lost` (SDL3) and `lost-headless` (tests)
+tools/
+  survey.py              what is in the image: header, frameworks, what a walk reaches
+  funcs.py               build gen/funcs.json, the seed the emitter's own walk starts from
+  emit.py                ARM → C++ static recompiler
+  recomp/                the package behind them: image, functions, arm, cfg, cpp, generate
+  progress.py            how much of the game is still recompiled rather than decompiled
+  manifest.py            write src/gamedata/manifest_data.cpp from a copy of the game's folder
+  port-from-minigolf.py  the only way a file enters this tree from the Mini Golf recomp
+  oracle-emulator/       a pinned copy of the emulator; recordings are made with this one
+gen/                     GENERATED, never hand-edited
+src/
+  runtime/               guest CPU state and memory, the eApp image, the frame pump, and the
+                         click wheel and buttons as this game's firmware delivered them
+  framework/             what the game may ask the platform to do, one header and namespace
+                         each: graphics.h (gfx), audio.h (audio), storage.h (storage),
+                         controls.h (controls), device.h (device) — plain C++, no ordinals
+  libeapp/               the iPod frameworks implementing those headers on the host; each entry
+                         point records the ordinal the hardware knew it by (imports.json)
+  gamedata/              the manifest of the game's files, verification, first-run install
+  game/                  the game, hand-decompiled — grows as gen/ shrinks; and cheats.{h,cpp},
+                         the deliberate changes to what the game does
+  platform/              the portable half (paths, settings, save store, key bindings, .wav),
+                         then one directory per platform: sdl3/ (desktop), null/ (headless)
+tests/
+  scripts/*.script       scripted input, the same format the emulator's `play` uses
+  expected/*.calls       framework-call logs recorded from the emulator — the oracle
+  record.sh              make a recording: the pinned emulator, and the flags a case is defined by
+  diff.sh                run a case through the recomp and compare its calls with the recording
+  frames.sh / frames.py  the picture oracle: the same script through both, compared frame by frame
+  game-dir.sh            a private, freshly copied game folder per run
+  unit/                  stand-alone unit tests
+analysis/                the reverse-engineering evidence for this title (see its README)
+reference/               MANIFEST.md, what was pinned from the emulator and when; PORTED.md, the
+                         provenance of every file copied from the Mini Golf project
+```
+
+## The game's files
+
+The game's folder is `1B200` — 85 files, about 43 MB: the level files `l` and `l1`–`l26`, the
+data files `d1`–`d15`, `s`, sixteen music tracks (`.mp3` and `.m4a`), ten `soundbank_*.dat`, the
+launch splash, and `rserver.bin`, the render server the game hands to the GPU. They are the
+player's own copy of the game and are not in this repository.
+
+On first launch the game has none, so it opens the native file browser and asks for that folder —
+copied off an iPod, or a zip of it, either way. Every file is checked against
+`src/gamedata/manifest_data.cpp`, the size and CRC-32 of each as shipped, generated by
+`tools/manifest.py`; a wrong or damaged copy is refused with the reason and the browser opens
+again. **Nothing is written until every file has been read and matched**, so a refused install
+leaves no half-installed game behind.
+
+What is accepted is copied, not pointed at. The game writes into its own folder — its saved
+games — and so does this program, its settings and key bindings, and the folder a player picks is
+very often the only copy they have. The copy goes to the per-user data directory
+(`src/platform/paths.h`), which is where all of it then lives together:
+
+| macOS   | `~/Library/Application Support/iPod Lost/1B200` |
+|---------|------------------------------------------------|
+| Windows | `%APPDATA%\iPod Lost\1B200`                    |
+| Linux   | `$XDG_DATA_HOME/ipod-lost/1B200` (default `~/.local/share/…`) |
+
+`LOST_DATA_DIR` overrides the location. The installed files are verified on every launch — the
+saves and settings written beside them are ignored, since they are not part of what shipped — and
+if any has gone missing or changed, the browser comes back.
+
+`--install=PATH` installs from a folder or a zip without the dialog, which is what a headless run
+needs, and `--gamedir=DIR` bypasses all of this and runs straight from a directory, as the tests
+do: each of them is handed its own copy, so a run's saved games cannot change what the next one
+does and the folder you point `GAME_DIR` at is never written to.
+
+## Saving
+
+A saved game does not go out the way it comes in, and that is the whole of what makes this
+awkward:
+
+* **Writing** one is the store — `AsyncFileIO #12` open by name, `#16` hand over the whole thing,
+  `#14` close. Save and Exit does three of those in a single frame: `options.sav`, `lost.sav0` and
+  one more.
+* **Reading** one back is the ordinary file path — `#0` open, `#3` transfer, `#1` close — during
+  start-up, and the game opens the file with *write* mode to do it.
+
+So the mode a save is opened with says nothing about which way the bytes are going to move. Three
+rules follow, and the file layer keeps each of them:
+
+* A save is a name ending `.sav`, or `.sav` and a slot number: `options.sav`, `lost.sav0`,
+  `lost.sav1`, …
+* **An open never truncates**, and a transfer on a save always reads *out* of it. Doing either the
+  other way round overwrites the saved game with the buffer that was meant to receive it, which
+  has no symptom until the player goes looking for their game.
+* A save that is not there yet still opens, empty. The game expects to be able to open one before
+  it has ever written one, and decides there is none from the magic words it does not find.
+
+`tests/unit/save_files_test.cpp` holds a case for each, and `tests/save-and-exit.sh` plays the
+whole route: save, exit, relaunch, and the save still there.
+
+## Leaving the game
+
+The game asks to be put away rather than being taken away. It answers in the byte at `ctx+0x100`,
+which is not a status but the reason it wants to be called with *next*, and the frame loop feeds
+it back:
+
+* **5 — suspend.** "I am finished; call me back so I can shut down." Save and Exit raises it, and
+  so does Exit on the main menu. Called back with reason 5 the game releases everything it holds
+  and answers 6, and the program ends.
+* **2 — idle**, recorded alongside the request. This is the iPod dimming and then sleeping when it
+  is left alone. A window on a desktop has no such policy, so this one request is declined and the
+  game carries on; it asks again every frame until the next input refreshes its activity clock.
+
+Leaving the request unanswered is what made Save and Exit sit on its SAVING screen for ever. The
+pinned emulator still does, so this route is checked by `tests/save-and-exit.sh` against the game
+itself rather than against the emulator.
+
+`LOST_TRACE_FILES=1` prints one line per file operation — open, transfer, close, with the name,
+the byte count and the result. It is the quickest way to see what a screen is waiting for.
+
+Where a saved game *goes* is still the platform's choice — `src/platform/save_store.h` is a
+name-and-bytes interface, and a platform with somewhere of its own (a console's save archive, an
+app's private storage) returns a store for it from `Platform::create_save_store`. Returning
+nothing accepts the default: one file per save in the game's own folder, as the iPod did.
+
+## Building
+
+Requirements: CMake ≥ 3.21, a C++17 compiler, Python 3.10+, SDL3 (via `pkg-config`), zlib.
+
+```sh
+cmake -B build && cmake --build build
+./build/lost                                  # asks for the game's folder the first time
+./build/lost --install="…/Games_RO/1B200"     # or install it without the dialog
+```
+
+The default build is **Release**: `-O3 -g`, with its symbols and its assertions kept. That matters
+more here than in most projects, because the renderer is a software rasteriser and the optimiser's
+output *is* the frame rate — the same run took 60 ms a frame at `-O1` and 35 at `-O3`, before a
+line of the rasteriser was changed. `assert` is deliberately left live; it was measured to cost
+nothing.
+
+`-DCMAKE_BUILD_TYPE=RelWithDebInfo` is the debugging configuration and is `-O1 -g`, which is what
+makes a recompiled function steppable next to the emulator without being unusably slow.
+
+## Sound
+
+The game's sound effects are not files. Its ten `soundbank_*.dat` are a table of 64 fixed-size
+records — a name, a symbol, a length, a sample rate, a channel count and a bit depth — followed by
+the raw PCM of every sound in it, and the game reads that itself. What reaches this program is a
+buffer and the four numbers needed to read it, one framework call each, so `src/libeapp/audio.cpp`
+hands the platform samples rather than a path and nothing here knows the bank format.
+
+Music is the other half and is still files: sixteen tracks, eight of them AAC in `.m4a`, played
+through an `afplay` child process. That is a macOS crutch, isolated in `MusicPlayer` and labelled
+as such; elsewhere it degrades to silence with one warning.
+
+## What the pipeline decides
+
+The game selects one of the render server's fifty built-in pipelines before each block of draws
+(`OpenGLES #159`), and which one is selected decides what the fragment combiner does with the
+constant colour (`#147`). That program lives in the server's own firmware — `rserver.bin`, which
+the game uploads — so it cannot be decoded here and has to be read off what the game draws with
+each pipeline.
+
+What decides it in practice is not the pipeline but **what a draw points**. This game never turns
+an attribute array off — it does not import `glDisableVertexAttribArray` — so the enable flags say
+only that something, once, used an attribute. What it does instead is re-point every attribute it
+wants immediately before every draw. So an attribute belongs to a draw when it was pointed since
+the last one, and a draw that points no texture coordinates is painted in the constant colour:
+that is the letterbox bars, the white rule along each, and the dialogue panels
+(`src/libeapp/gles.cpp`, `rasterise_arrays`, with the disassembly that establishes it).
+
+Believing the enable flag instead means texturing those quads through the *previous* draw's
+coordinates, smeared across the whole bar — which looks so much like a blurred copy of the scene
+that it was reported as one.
+
+Everywhere else the constant colour is left alone. It is not a general tint: the name-entry screen
+draws almost everything with the register sitting at a colour from something else entirely, and
+taking it there would repaint the screen.
+
+A draw also only reads the corner of the sheet its own coordinates name. Sprites are packed
+together, and a bilinear tap half a texel outside one reads its neighbour — which shows most where
+a symmetrical thing is drawn as one half twice, as the click wheel and Jack both are: each half
+finishes with a column of whatever was packed beside it, and the two meet as a seam down the
+middle. Clamping to the sprite's edge rather than the sheet's is what stops it.
+
+`LOST_VERTEX_HASH=1` prints a line per draw with its pipeline, constant colour, texture and
+extent, which is how all of the above was established.
+
+## Drawing more than the iPod could
+
+Everything above is the iPod's picture. Two settings depart from it, and both are off unless a
+player turns them on in **Settings ▸ Graphics**. Neither is visible to the game, which goes on
+computing every coordinate it has in 320×240 and is never told otherwise.
+
+**Render scale** (1×–4×) draws into a framebuffer that many times the size in each direction. The
+scale is applied in exactly one expression — `project` in `src/libeapp/gles.cpp` — so nothing the
+game draws moves; what changes is how finely an edge is resolved. Where that is worth having is
+narrower than it sounds:
+
+* A **1:1 sprite blit** gains nothing, and must gain nothing: it is still recognised as 1:1 — in
+  the *game's* pixels, which is what `is_one_to_one_over` divides by the scale to ask — and still
+  sampled nearest, so it enlarges as the same hard blocks. Raising the scale never softens a
+  sprite.
+* **Transformed or scaled geometry** is where it shows: the ground plane, the scene, anything the
+  16.16 matrix has been through.
+* **Text** is the other place, and it needs the second setting.
+
+**Dialogue text at window resolution** reconstructs a glyph's edge instead of enlarging it. The
+game draws a line of dialogue as one `glDrawArrays` of quads — 121 of them for the Chapter 1
+card — each about 11×13 pixels and each 1:1 with its own cell of an anti-aliased font sheet, laid
+out at fractional positions. `is_text_run` recognises that shape: at least four small quads, each
+1:1 with its own rectangle, **and each of those rectangles holding a coverage edge** — texels that
+are all but opaque and texels that are all but clear.
+
+That last condition is the one that matters, and it was missing at first. Reconstruction treats
+alpha as *coverage*: opaque inside the letter, clear outside, with a ramp between that is the edge
+worth sharpening. A sprite whose alpha is *translucency* instead — uniformly half-there, opaque
+nowhere — has no such edge, and pushing its coverage to full contrast does not sharpen it, it
+decides the whole sprite is outside the letter and removes it. A character's drop shadow is
+exactly that kind of sprite, and is drawn in exactly the shape the test was looking for: two
+mirrored 11×13 quads, each 1:1 with its own cell. Every drop shadow in the game disappeared at any
+scale above 1× until the sheet itself was consulted. Those quads are then sampled with the
+coverage taken back to full contrast across one raster pixel, wherever that pixel falls, so the
+letter's edge lands where the sheet says it is rather than being spread across however far the
+picture was enlarged.
+
+It does nothing at 1×, and cannot: one texel is one pixel and there is no edge to resolve. The
+settings window greys it out there rather than letting it be turned on to no effect.
+
+Both are refused outright while `--emulator-graphics` is on, because the picture oracle compares
+whole 320×240 frames and has nothing to compare a larger one with. `tests/unit/render_scale_test`
+pins that the flag takes them away rather than merely being ignored by them.
+
+**What it costs.** Every step costs its square in fragments, but the rasteriser is drawn on every
+core and no longer at `-O1`, so the square is smaller than it sounds. Measured over the same
+2 400-frame run — 4.9 million fragments a frame at 4× — on an M1 Max, ten cores:
+
+| scale | picture | one thread | all cores |
+|---|---|---|---|
+| 1× | 320×240 | 1.2 ms · 857 fps | 1.2 ms · 860 fps |
+| 2× | 640×480 | 4.3 ms · 233 fps | 1.7 ms · 606 fps |
+| 3× | 960×720 | 9.4 ms · 106 fps | 2.5 ms · 399 fps |
+| 4× | 1280×960 | 16.5 ms · 61 fps | 3.8 ms · 260 fps |
+| 5× | 1600×1200 | | 5.6 ms · 178 fps |
+| 6× | 1920×1440 | | 7.8 ms · 129 fps |
+| 7× | 2240×1680 | | 10.8 ms · 93 fps |
+| 8× | 2560×1920 | | 13.2 ms · 76 fps |
+
+At 1× there is not enough in a frame to be worth waking anybody for, and the two columns are the
+same run. 8× is the ceiling, and it is there because past it the picture stops repaying the
+14 MB rather than because anything breaks — the game's art is 2008 art, and beyond about 4× what
+gets sharper is only the geometry's edges and the text. Where the numbers came from, and what they were before, is the progress log entry for
+2026-08-27; the short version is that 4× used to be 60 ms a frame and is now 3.8.
+
+**Drawn on every core.** The raster is cut into horizontal stripes and each is taken by whichever
+thread is free — several stripes per thread, claimed with one atomic increment, because this
+machine has eight fast cores and two slow ones and an even share would leave the fast eight
+waiting. A pixel belongs to exactly one stripe, so the draws that touch it still arrive in the
+order the game issued them, through the same arithmetic: **every frame is bit-for-bit the frame
+one thread would have drawn**, which is why this is on by default and why the picture oracle never
+had to be told about it. `--render-threads=N` pins it, and `--render-threads=1` starts no threads
+at all.
+
+## Cheats
+
+**Settings ▸ Cheats**, on a tab of its own because these change what the *game* does rather than
+how this program shows it. Everything here is off by default, off in every test, and off in a
+fresh settings file.
+
+**Unlock all chapters** makes Play ▸ Select Chapter offer all nine — The Arrival through The
+Escape — instead of only the ones you have reached, and the game loads whichever you pick.
+
+Every menu in this game is an array of 32-bit words in the image's own data, one per item, and the
+game rewrites them where they stand: the low halfword is the item's index into the string table
+(the file `s`), the high halfword its flags, and bit `0x20000` means *hidden*. The chapter menu is
+eleven such words at `0x18040530` — the nine chapter names, then BACK and SELECT — and on a
+profile that has finished nothing it reads
+
+    0000008c 0002008d 0002008e 0002008f 00020090 00020091 00020092 00020093 00020094 ...
+
+which is chapter 1 available and the other eight hidden. **That is the whole of the lock.** The
+cheat clears that one bit on those eight words, every frame, because the game sets them again
+whenever it builds the menu.
+
+Nothing about your progress is touched and nothing is written: no save is modified, and turning
+the switch off puts the menu back on the next frame. That is deliberate — a cheat that rewrote a
+save would still be in the save after it was turned off — and it is also the only thing that
+*works*, since the game checksums its saves in a way this program cannot yet reproduce.
+
+`tests/cheats.sh` runs `tests/scripts/chapter-select.script` twice, with the cheat and without,
+and reads those eleven words back out of guest memory. Both readings are checked: a cheat that
+did nothing would pass a test that only looked at the unlocked run.
+
+## Controls
+
+The iPod had one wheel and five buttons, and the wheel has two gestures rather than one — you can
+*turn* it, and you can *rest a finger on one of its sides*. This game uses both, and they are not
+interchangeable: turning moves a menu, and touching walks. It teaches this itself, drawing the
+wheel with its lower quarter lit: **TOUCH THE LOWER SIDE OF THE WHEEL TO MAKE JACK MOVE
+DOWNWARDS**. So there are eleven things a player can do:
+
+| | default |
+|---|---|
+| Touch Up / Right / Bottom / Left | ↑ → ↓ ← — hold one to walk, tap ← or → to move a menu |
+| Scroll left / Scroll right | `,` and `.` — tap for one row, **hold to keep the wheel turning** |
+| Select | Space |
+| Menu | Escape |
+| Play/Pause | Tab |
+| Rewind / Fast forward | `[` and `]` |
+
+**P** takes a screenshot and **Q** quits; those two are the program's rather than the device's and
+are not bindable. Everything else is, from Settings ▸ Input (⌘, on macOS), and the bindings are
+saved with the game. That window has four tabs: General, Input, Graphics and Cheats.
+
+The arrows go to the four sides of the wheel because that is what the game asks for by name, and
+an arrow is what a hand reaches for to walk. Turning it therefore cannot have them — an input does
+exactly one thing, so a key given to a touch is taken from whatever had it — which is why
+scrolling starts on `,` and `.`. Anyone who would rather have it the other way round can say so
+in Settings ▸ Input; it is two menus.
+
+A touch is *held*, unlike everything else here: the character keeps walking for as long as the key
+is down, so the platform reports which side is under the finger each frame rather than when it
+went down.
+
+**Tapping ← or → moves a menu, holding one walks.** On the wheel those are the same gesture seen
+over different lengths of time — a thumb that brushes the side of the wheel and leaves has turned
+it; one that stays has picked a direction — and the game reads them from one number, so they
+cannot both be asserted at once. A tap is therefore turned into a flick of the wheel *after* the
+finger comes off, where there is no walk left for a moving position to spoil. The two are told
+apart by how long the key was down; a third of a second is the line.
+
+Holding ← or → in a menu does not repeat: a resting finger reports the same place every frame, and
+a menu moves on the wheel's *change*, not on where the finger is. Tap again, or hold a scroll key,
+which is the gesture that keeps turning.
+
+**A scroll key does two things, and the difference is the finger.** A press is a *flick* worth one
+row — the wheel counts 120 detents to a turn and a menu moves a row every eight of them. Holding
+one past a fifth of a second is a different gesture: the wheel keeps turning and the finger never
+comes off, gathering pace as a thumb does, from one detent a frame up to six over a second — three
+turns a second, about as fast as a hand goes. The game reads the distance the wheel moved between
+polls, so speed is part of what it is being told, not only direction. That matters because the game asks for both. A menu wants rows; a
+thing that has to be *wound* — Jack lifting something off the beach — wants a turn that does not
+stop, and eight detents followed by an empty queue is a finger lifted, not a spin. Nothing in a
+menu changed: the delay before a hold becomes a spin is longer than the eight detents a press
+queues take to arrive, so a tap is still worth exactly one row and no more.
+
+Both gestures are the same finger, so at most one of them speaks per frame, and a rest wins:
+someone holding a direction to walk is not also asking the wheel to turn.
+
+`LOST_TRACE_INPUT=1` prints every key the window receives and what it is bound to, which is the
+difference between reading the answer and guessing at it when a control misbehaves.
+
+Three things about this game's input are its own rather than the platform's, and all three are in
+`src/runtime/main.cpp`: it has no button flags word, so a press is delivered as a node on the
+firmware's event list; it has no press-time words, so a held Menu cannot be told from a tap; and
+the four sides of the wheel are not where compass order would put them — the position byte starts
+at three o'clock and runs counter-clockwise, so they are right 0, top 64, left 128, bottom 192.
+That last one is measured against the game's own movement, and `tests/scripts/walk.script` is what
+keeps it honest: it does what the tutorial asks and the game answers **EXCELLENT!**
+
+## Frame rate and tearing
+
+Every frame waits for the display before it is shown, so a frame is never half of one and half of
+the next. Without that wait the seam between them is a tear, and it is worst at a rate that is not
+the display's: at 30 frames a second on a 120 Hz screen the two drift against each other and the
+tear line marches down the picture rather than sitting still.
+
+There are two ways to wait and the better one is not always available. A vsync *interval* —
+present every Nth refresh — paces the frames exactly and needs no timer at all, but macOS's Metal
+renderer takes only 1 and refuses anything above it. So the interval is asked for first and plain
+vsync is the fallback: presenting still waits for a refresh, and the timer decides which one to
+land on. The program says which it got, once, and again if it changes:
+
+    display: 120 Hz, 60 fps — every 2 refreshes, paced by the display
+    display: 120 Hz, 30 fps — waits for a refresh, paced by a timer
+
+**Unlocked** (Settings ▸ General, or the L key) is the exception: it asks for frames as fast as
+they come, which means not waiting, which means tearing. That is what it is for — the rate in the
+title bar is the point of it — and it says so when it starts.
+
+A rate below the display's still shows each frame for several refreshes, which is judder rather
+than tearing and cannot be helped at that rate: 60 is smoother than 30 for the same reason it is
+on any machine.
+
+## Testing
+
+```sh
+ctest --test-dir build          # unit tests, both call-log tiers, and the picture oracle
+tests/diff.sh boot              # one recorded case, verbose
+tests/diff.sh boot --exact      # the same case compared word for word
+tests/frames.sh jungle          # the same case compared as pictures
+tests/cheats.sh                 # the chapter menu, with the cheat and without
+```
+
+An oracle case is a script of input events plus the log of framework calls the emulator made
+while running it; the recompilation passes when it makes the identical sequence of calls with
+identical arguments. `tests/diff.sh` compares each call's ordinal and its real arguments (arity
+from `src/libeapp/imports.json`); `--exact` compares every logged register and every stack word
+behind it, leftovers included, which only register-for-register code can reproduce — which is
+what this build still is, since nothing in `src/game/` is decompiled code yet.
+
+**The call log cannot see what a draw drew.** A draw hands the framework an address and a count;
+what lives at that address is never an argument, so a texture decoded through the wrong palette
+or a quad in the wrong place changes not one word of the log. `tests/frames.sh <case>` is the
+answer: it runs the same script through the recomp and the pinned emulator and compares the
+pictures, with a threshold rather than a hash — the two rasterisers round differently on about
+0.3% of a frame, and a real fault is nothing like that small. Both rendering faults found on day
+one were found this way and could not have been found any other.
+
+To add a case: write `tests/scripts/<name>.script`, run `tests/record.sh <name>`, and CMake picks
+it up — a call-log test on both tiers, plus a picture test if the script takes a `shot`. A case
+must end in `quit`, and sooner rather than later: an unbounded boot is 2.9 million calls and
+300 MB of log.
+
+Recordings are made from the **pinned** copy of the emulator under `tools/oracle-emulator/`,
+never the live tree — the live tree changes under other people's work and stops reproducing its
+own recordings, which is a lesson the Mini Golf project paid for. Build it once with:
+
+```sh
+cargo build --release --manifest-path tools/oracle-emulator/Cargo.toml \
+    --target-dir build/oracle-emulator
+```
+
+## Status
+
+**Day two.** The game runs natively in a window and is played from the keyboard; every one of its
+789 functions is still the recompilation, and none is hand-decompiled yet. Both oracle cases —
+`boot` (84 810 framework calls) and `name-entry` (115 630) — are identical to the emulator's
+recordings under the *exact* comparison; the picture oracle agrees with the emulator frame by
+frame through the menus and into the jungle; and `ctest` is 17 for 17.
+
+Three things this port does that the iPod did not, all off by default: the render scale, dialogue
+text at the raster's resolution, and unlocking every chapter. See the two sections above.
+
+`PLAN.md` carries the schedule, what each of the seven differences from the Mini Golf recomp cost
+to pay for, and — at the end of its progress log — the three things that are **not** established.
+Nothing in this README claims a behaviour that has not been run.

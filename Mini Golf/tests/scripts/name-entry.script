@@ -1,0 +1,18 @@
+200: select
+260: wheel +240
+330: wheel +240
+400: wheel +240
+480: shot
+500: select
+700: shot
+740: select
+1000: shot
+1040: select
+1300: shot
+1340: select
+1600: shot
+1640: select
+1900: shot
+1940: select
+2200: shot
+2200: quit

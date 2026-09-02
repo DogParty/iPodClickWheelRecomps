@@ -1,0 +1,9 @@
+# Spell a letter at the name-entry screen: turn the wheel to move the highlight, then Select.
+# The wheel matters twice over — it moves the cursor, and the game only looks at the button
+# event list on a frame whose input flags a wheel sample set (see runtime/main.cpp).
+420: wheel +3
+440: select
+460: wheel +2
+480: select
+500: shot
+520: quit

@@ -1,0 +1,20 @@
+# Bowl Now!, the Controls screen, Set position (wheel), Aim, Set power, and the ball rolled: the
+# first oracle that plays the game (PLAN.md block 6). Screenshots at each screen along the way.
+1000: select
+1100: select
+1300: select
+1700: select
+2100: select
+2500: select
+2900: wheel +3
+3100: select
+3300: shot
+3400: select
+3500: shot
+3700: select
+3900: shot
+4300: select
+4500: shot
+5500: shot
+6500: shot
+6500: quit

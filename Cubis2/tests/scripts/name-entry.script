@@ -1,0 +1,5 @@
+# One Select on NEW GAME reaches Name Entry (analysis/coverage/new-game-probe-*): a wheel of
+# letters with the tick, backspace and space glyphs to their left. A screenshot of it.
+600: select
+900: shot
+1000: quit

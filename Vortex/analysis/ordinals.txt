@@ -1,0 +1,69 @@
+# Framework ordinals Vortex reached in the emulator, and what the other titles call them.
+# Columns: ordinal, calls in scripts/boot-probe.script (3000 frames, no input), calls in
+# scripts/new-game-probe.script (6500 frames: a name entered, NEW GAME, the first level to GAME OVER),
+# then the name in Mini Golf's / Lost's / Hold'em's / Sims Bowling's imports.json. 'unnamed' = no
+# title has met it; look it up in the pinned emulator's lib.rs before naming it.
+
+AsyncFileIO#0           12      18   Mini Golf: afio_open / Lost: afio_open / HoldEm: afio_open / Bowling: afio_open
+AsyncFileIO#1           12      18   Mini Golf: afio_close / Lost: afio_close / HoldEm: afio_close / Bowling: afio_close
+AsyncFileIO#2           26      32   Mini Golf: afio_read / Lost: afio_read / HoldEm: afio_read / Bowling: afio_read
+AsyncFileIO#3           12      12   Mini Golf: afio_open_alt / Lost: afio_open_alt / HoldEm: afio_open_alt / Bowling: afio_open_alt
+Audio#0                 47      47   Mini Golf: audio_sfx_create / Lost: audio_sfx_create / HoldEm: audio_sfx_create / Bowling: audio_sfx_create
+Audio#2                237     304   Mini Golf: audio_sfx_play / Lost: audio_sfx_play / HoldEm: audio_sfx_play / Bowling: audio_sfx_play
+Audio#7                 47      47   Mini Golf: audio_sfx_set_buffer / Lost: audio_sfx_set_buffer / HoldEm: audio_sfx_set_buffer / Bowling: audio_sfx_set_buffer
+Audio#8                 47      47   Mini Golf: audio_sfx_set_field_08 / Lost: audio_sfx_set_field_08 / HoldEm: audio_sfx_set_field_08 / Bowling: audio_sfx_set_field_08
+Audio#9                 47      47   Mini Golf: audio_sfx_set_field_0c / Lost: audio_sfx_set_field_0c / HoldEm: audio_sfx_set_field_0c / Bowling: audio_sfx_set_field_0c
+Audio#10                47      47   Mini Golf: audio_sfx_set_field_10 / Lost: audio_sfx_set_field_10 / HoldEm: audio_sfx_set_field_10 / Bowling: audio_sfx_set_field_10
+Audio#11                47      47   Mini Golf: audio_sfx_set_field_14 / Lost: audio_sfx_set_field_14 / HoldEm: audio_sfx_set_field_14 / Bowling: audio_sfx_set_field_14
+Audio#12                47      47   Mini Golf: audio_sfx_set_field_18 / Lost: audio_sfx_set_field_18 / HoldEm: audio_sfx_set_field_18 / Bowling: audio_sfx_set_field_18
+Audio#13               237     304   Mini Golf: audio_sfx_set_field_1c / Lost: audio_sfx_set_field_1c / HoldEm: audio_sfx_set_field_1c / Bowling: audio_sfx_set_field_1c
+Audio#14               237     304   Mini Golf: audio_sfx_set_field_24 / Lost: audio_sfx_set_field_24 / HoldEm: audio_sfx_set_field_24 / Bowling: audio_sfx_set_field_24
+Audio#15               237     304   Mini Golf: audio_sfx_set_field_20 / Lost: audio_sfx_set_field_20 / HoldEm: audio_sfx_set_field_20 / Bowling: audio_sfx_set_field_20
+Audio#17                47      47   Mini Golf: audio_sfx_set_state / Lost: audio_sfx_set_state / HoldEm: audio_sfx_set_state / Bowling: audio_sfx_set_state
+Audio#18                47      47   Mini Golf: audio_sfx_set_field_3e / Lost: audio_sfx_set_field_3e / HoldEm: audio_sfx_set_field_3e / Bowling: audio_sfx_set_field_3e
+Audio#40                 3       3   Mini Golf: audio_stream_register / Lost: audio_stream_register / HoldEm: audio_stream_register / Bowling: audio_stream_register
+Audio#43                 1       1   Mini Golf: audio_stream_play / Lost: audio_stream_play / HoldEm: audio_stream_play / Bowling: audio_stream_play
+Audio#47                 1       1   Bowling: audio_zero
+Audio#48                 1       1   Mini Golf: audio_stream_repeat / Lost: audio_stream_repeat / HoldEm: audio_stream_repeat / Bowling: audio_stream_repeat
+Audio#49                 1       1   unnamed
+Audio#52                 1       1   Mini Golf: audio_query_ff / Lost: audio_query_ff / HoldEm: audio_query_ff / Bowling: audio_query_ff
+Audio#55                 1       1   Mini Golf: audio_zero / Lost: audio_zero / HoldEm: audio_zero / Bowling: audio_zero
+Audio#56                 6      13   Mini Golf: audio_zero / Lost: audio_zero / HoldEm: audio_zero / Bowling: audio_zero
+InputEvents#0         3002    6502   Mini Golf: input_poll / Lost: input_poll / HoldEm: input_poll / Bowling: input_poll
+Metadata#62              2       2   Lost: metadata_now_playing_playlist / HoldEm: metadata_now_playing_playlist / Bowling: metadata_now_playing_playlist
+Metadata#125             1       1   unnamed
+Metadata#134             1       1   Lost: metadata_playlist_track_count / HoldEm: metadata_playlist_track_count / Bowling: metadata_playlist_track_count
+OpenGLES#0              86     292   Lost: gl_active_texture / HoldEm: gl_active_texture / Bowling: gl_active_texture
+OpenGLES#4           44792   88342   Mini Golf: gl_bind_texture / Lost: gl_bind_texture / HoldEm: gl_bind_texture / Bowling: gl_bind_texture
+OpenGLES#12             68      68   Mini Golf: gl_clear / Lost: gl_clear / HoldEm: gl_clear / Bowling: gl_clear
+OpenGLES#13              1       1   Mini Golf: gl_clear_color / Lost: gl_clear_color / HoldEm: gl_clear_color / Bowling: gl_clear_color
+OpenGLES#19              2       2   Mini Golf: gl_compressed_tex_image_2d / Lost: gl_compressed_tex_image_2d / HoldEm: gl_compressed_tex_image_2d / Bowling: gl_compressed_tex_image_2d
+OpenGLES#21              1       6   Mini Golf: gl_copy_tex_image_2d / Lost: gl_copy_tex_image_2d / HoldEm: gl_copy_tex_image_2d / Bowling: gl_copy_tex_image_2d
+OpenGLES#36          44691   88131   Mini Golf: gl_disable_vertex_attrib_array / Lost: gl_disable_vertex_attrib_array / HoldEm: gl_disable_vertex_attrib_array / Bowling: gl_disable_vertex_attrib_array
+OpenGLES#37          44691   88131   Mini Golf: gl_draw_arrays / Lost: gl_draw_arrays / HoldEm: gl_draw_arrays / Bowling: gl_draw_arrays
+OpenGLES#40         121684  242565   Mini Golf: gl_enable_vertex_attrib_array / Lost: gl_enable_vertex_attrib_array / HoldEm: gl_enable_vertex_attrib_array / Bowling: gl_enable_vertex_attrib_array
+OpenGLES#45             57      57   HoldEm: gl_gen_textures / Bowling: gl_gen_textures
+OpenGLES#99             55      55   Mini Golf: gl_tex_image_2d / Lost: gl_tex_image_2d / HoldEm: gl_tex_image_2d / Bowling: gl_tex_image_2d
+OpenGLES#105             0       2   HoldEm: gl_tex_sub_image_2d / Bowling: gl_tex_sub_image_2d
+OpenGLES#125         37342   68491   Mini Golf: gl_uniform_matrix_4fv / Lost: gl_uniform_matrix_4fv / HoldEm: gl_uniform_matrix_4fv / Bowling: gl_uniform_matrix_4fv
+OpenGLES#137        121684  242565   Mini Golf: gl_vertex_attrib_pointer / Lost: gl_vertex_attrib_pointer / HoldEm: gl_vertex_attrib_pointer / Bowling: gl_vertex_attrib_pointer
+OpenGLES#148         12389   21828   HoldEm: gl_uniform_4xv / Bowling: gl_uniform_4xv
+OpenGLES#157          3002    6502   Mini Golf: gl_swap_buffers / Lost: gl_swap_buffers / HoldEm: gl_swap_buffers / Bowling: gl_swap_buffers
+OpenGLES#158          6002   13002   Mini Golf: gl_query_0x3000 / Lost: gl_query_0x3000 / HoldEm: gl_query_0x3000 / Bowling: gl_query_0x3000
+OpenGLES#159         28069   50971   Mini Golf: gl_one / Lost: gl_one / HoldEm: gl_one / Bowling: gl_one
+OpenGLES#165             1    1217   Mini Golf: gl_load_identity / Lost: gl_load_identity / HoldEm: gl_load_identity / Bowling: gl_load_identity
+OpenGLES#167             1       1   Mini Golf: gl_ortho / Lost: gl_ortho / HoldEm: gl_ortho / Bowling: gl_ortho
+OpenGLES#169             0    1216   HoldEm: gl_translate_matrix / Bowling: gl_translate_matrix
+OpenGLES#173             0     608   HoldEm: gl_rotate_matrix / Bowling: gl_rotate_matrix
+OpenGLES#175         37342   68491   Mini Golf: gl_mult_matrix / Lost: gl_mult_matrix / HoldEm: gl_mult_matrix / Bowling: gl_mult_matrix
+Settings#0               2       2   Mini Golf: settings_get / Lost: settings_get / HoldEm: settings_get / Bowling: settings_get
+miscTBD#0              733    5902   Mini Golf: misc_alloc / Lost: misc_alloc / HoldEm: misc_alloc / Bowling: misc_alloc
+miscTBD#1              276    5438   Mini Golf: misc_free / Lost: misc_free / HoldEm: misc_free / Bowling: misc_free
+miscTBD#2             1721    2934   unnamed
+miscTBD#6                1       1   Mini Golf: misc_device_level_get / Lost: misc_device_level_get / HoldEm: misc_device_level_get / Bowling: misc_device_level_get
+miscTBD#9            17872   38930   Mini Golf: misc_clock / Lost: misc_clock / HoldEm: misc_clock / Bowling: misc_clock
+miscTBD#10             237     304   Mini Golf: misc_thousand / Lost: misc_thousand / HoldEm: misc_thousand / Bowling: misc_thousand
+miscTBD#11             237     304   Mini Golf: misc_zero / Lost: misc_zero / HoldEm: misc_zero / Bowling: misc_zero
+miscTBD#12               0    1205   Mini Golf: misc_host_time / Lost: misc_host_time / HoldEm: misc_host_time / Bowling: misc_host_time
+miscTBD#13               0       9   Mini Golf: misc_host_battery / Lost: misc_host_battery / HoldEm: misc_host_battery / Bowling: misc_host_battery
+miscTBD#14               3       3   Mini Golf: misc_resolve_name / Lost: misc_resolve_name / HoldEm: misc_resolve_name / Bowling: misc_resolve_name

@@ -1,0 +1,11 @@
+[package]
+name = "arm7tdmi"
+version = "0.1.0"  # pinned copy: no workspace above it to inherit from
+edition = "2021"
+description = "ARMv4T (ARM7TDMI) interpreter core — ARM + Thumb, no JIT, no_std-friendly"
+
+[dependencies]
+
+[lib]
+name = "arm7tdmi"
+path = "src/lib.rs"

@@ -1,0 +1,124 @@
+Every image asset in the game folder, identified from its own header, not its extension.
+
+file                                    size  as read here
+classic/sheet-0-c.raw                228x240  TGA 16bpp grey+alpha [exact]
+classic/sheet-0-w.raw                228x240  TGA 16bpp grey+alpha [exact]
+classic/sheet-1-c.raw                228x204  TGA 16bpp grey+alpha [exact]
+classic/sheet-1-w.raw                228x204  TGA 16bpp grey+alpha [exact]
+common00.raw                         112x185  TGA 16bpp grey+alpha [exact]
+common01.pix                         228x104  IPD RGBA4444
+common02.pix                         228x128  BMP ARGB4444
+common03a.pix                        176x840  BMP ARGB4444
+common03b.pix                        176x770  BMP ARGB4444
+desert/background.pix                320x240  IPD RGB565
+desert/river.pix                     122x438  BMP RGB565
+fonts/cibola-11.raw                    96x84  TGA 8bpp grey+alpha [exact]
+fonts/insignia-12.raw                128x196  TGA 8bpp grey+alpha [exact]
+fonts/insignia-14.raw                144x196  TGA 8bpp grey+alpha [exact]
+fonts/insignia-16.raw                164x238  TGA 8bpp grey+alpha [exact]
+fonts/jp-14.raw                      512x252  TGA 8bpp grey+alpha [exact]
+fonts/jp-16.raw                      512x312  TGA 8bpp grey+alpha [exact]
+fonts/maiandra-7.raw                  84x126  TGA 8bpp grey+alpha [exact]
+fonts/maiandra-bold-7.raw             92x126  TGA 8bpp grey+alpha [exact]
+fonts/rockart-11.raw                  124x78  TGA 8bpp grey+alpha [exact]
+fonts/tribeca-11.raw                  124x72  TGA 8bpp grey+alpha [exact]
+help.pix                             212x175  BMP 8bpp coverage ramp
+images/arrow.ipd                       16x32  IPD RGBA4444
+images/battery.raw                      22x9  TGA 16bpp grey+alpha [exact]
+images/btngreen.ipd                   110x20  IPD RGBA4444
+images/btnorange.ipd                  110x20  IPD RGBA4444
+images/char.raw                        24x72  TGA 16bpp grey+alpha [exact]
+images/gamehighlight.ipd              168x20  IPD RGBA4444
+images/gamehighlightbar.ipd           162x28  IPD RGBA4444
+images/highlighticon.ipd               18x21  IPD RGBA4444
+images/logo.ipd                      152x136  IPD RGBA4444
+images/logomed.ipd                   114x103  IPD RGBA4444
+images/logosml.ipd                     68x64  IPD RGBA4444
+images/menubg.raw                    320x240  TGA 16bpp grey+alpha [exact]
+images/menuheader.ipd                 308x49  IPD RGBA5551
+images/namecubes.ipd                  112x46  IPD RGBA4444
+images/namecursor.ipd                  16x18  IPD RGBA4444
+images/sliderbar.ipd                  110x10  IPD RGBA4444
+images/slidericon.ipd                  28x33  IPD RGBA4444
+images/thumbnail.ipd                 130x144  IPD RGB565
+images/thumbnailhighlight.ipd          72x54  IPD RGBA4444
+jewel/sheet-0-c.raw                  228x240  TGA 16bpp grey+alpha [exact]
+jewel/sheet-0-w.raw                  228x240  TGA 16bpp grey+alpha [exact]
+jewel/sheet-1-c.raw                  228x204  TGA 16bpp grey+alpha [exact]
+jewel/sheet-1-w.raw                  228x204  TGA 16bpp grey+alpha [exact]
+loadingbar.pix                           2x6  BMP RGB565
+metallic/sheet-0-c.raw               228x240  TGA 16bpp grey+alpha [exact]
+metallic/sheet-0-w.raw               228x240  TGA 16bpp grey+alpha [exact]
+metallic/sheet-1-c.raw               228x204  TGA 16bpp grey+alpha [exact]
+metallic/sheet-1-w.raw               228x204  TGA 16bpp grey+alpha [exact]
+rainforest/background.pix            320x240  IPD RGB565
+rainforest/drip.pix                   48x435  BMP RGB565
+underwater/background.pix            320x240  IPD RGB565
+underwater/bubbles-fish.pix           14x693  IPD RGB565
+underwater/bubbles-left.pix           32x715  IPD RGB565
+underwater/fish.pix                   26x396  BMP RGB565
+
+56 files, 0 not recognised.
+
+57 texture uploads in build/texlog.txt, joined against those files:
+
+  tex#0         2x6  = loadingbar.pix   (BMP RGB565)
+  tex#1     152x136  = images/logo.ipd   (IPD RGBA4444)
+  tex#2     114x103  = images/logomed.ipd   (IPD RGBA4444)
+  tex#3       68x64  = images/logosml.ipd   (IPD RGBA4444)
+  tex#4      110x20  = images/btngreen.ipd   (IPD RGBA4444)
+  tex#5      110x20  = images/btnorange.ipd   (IPD RGBA4444)
+  tex#6      110x10  = images/sliderbar.ipd   (IPD RGBA4444)
+  tex#7       28x33  = images/slidericon.ipd   (IPD RGBA4444)
+  tex#8       18x21  = images/highlighticon.ipd   (IPD RGBA4444)
+  tex#9        22x9  = images/battery.raw   (TGA 16bpp grey+alpha [exact])
+  tex#10    212x175  = help.pix   (BMP 8bpp coverage ramp)
+  tex#11    320x240  = images/menubg.raw   (TGA 16bpp grey+alpha [exact])
+  tex#12     308x49  = images/menuheader.ipd   (IPD RGBA5551)
+  tex#13     168x20  = images/gamehighlight.ipd   (IPD RGBA4444)
+  tex#14     162x28  = images/gamehighlightbar.ipd   (IPD RGBA4444)
+  tex#15      72x54  = images/thumbnailhighlight.ipd   (IPD RGBA4444)
+  tex#16    130x144  = images/thumbnail.ipd   (IPD RGB565)
+  tex#17      16x32  = images/arrow.ipd   (IPD RGBA4444)
+  tex#18      24x72  = images/char.raw   (TGA 16bpp grey+alpha [exact])
+  tex#19      16x18  = images/namecursor.ipd   (IPD RGBA4444)
+  tex#20     112x46  = images/namecubes.ipd   (IPD RGBA4444)
+  tex#24    112x185  = common00.raw   (TGA 16bpp grey+alpha [exact])
+  tex#25    228x104  = common01.pix   (IPD RGBA4444)
+  tex#26    228x128  = common02.pix   (BMP RGBA4444)
+  tex#27    176x840  = common03a.pix   (BMP ARGB4444)
+  tex#28    176x770  = common03b.pix   (BMP RGBA4444)
+  tex#32      96x84  = fonts/cibola-11.raw   (TGA 8bpp grey+alpha [exact])
+  tex#33    164x238  = fonts/insignia-16.raw   (TGA 8bpp grey+alpha [exact])
+  tex#34    144x196  = fonts/insignia-14.raw   (TGA 8bpp grey+alpha [exact])
+  tex#35    128x196  = fonts/insignia-12.raw   (TGA 8bpp grey+alpha [exact])
+  tex#36     84x126  = fonts/maiandra-7.raw   (TGA 8bpp grey+alpha [exact])
+  tex#37     92x126  = fonts/maiandra-bold-7.raw   (TGA 8bpp grey+alpha [exact])
+  tex#38     124x78  = fonts/rockart-11.raw   (TGA 8bpp grey+alpha [exact])
+  tex#39     124x72  = fonts/tribeca-11.raw   (TGA 8bpp grey+alpha [exact])
+  tex#40    512x252  = fonts/jp-14.raw   (TGA 8bpp grey+alpha [exact])
+  tex#41    512x312  = fonts/jp-16.raw   (TGA 8bpp grey+alpha [exact])
+  tex#56    320x240  = underwater/background.pix   (IPD RGB565)
+  tex#57     14x693  = underwater/bubbles-fish.pix   (IPD RGB565)
+  tex#58     32x715  = underwater/bubbles-left.pix   (IPD RGB565)
+  tex#59     26x396  = underwater/fish.pix   (BMP RGB565)
+  tex#60    320x240  = rainforest/background.pix   (IPD RGB565)
+  tex#61     48x435  = rainforest/drip.pix   (BMP RGB565)
+  tex#62    320x240  = desert/background.pix   (IPD RGB565)
+  tex#63    122x438  = desert/river.pix   (BMP RGB565)
+  tex#44    228x240  = jewel/sheet-0-c.raw   (TGA 16bpp grey+alpha [exact])
+  tex#45    228x240  = classic/sheet-0-w.raw   (TGA 16bpp grey+alpha [exact])
+  tex#46    228x204  = jewel/sheet-1-c.raw   (TGA 16bpp grey+alpha [exact])
+  tex#47    228x204  = classic/sheet-1-w.raw   (TGA 16bpp grey+alpha [exact])
+  tex#48    228x240  = classic/sheet-0-c.raw   (TGA 16bpp grey+alpha [exact])
+  tex#49    228x240  = classic/sheet-0-w.raw   (TGA 16bpp grey+alpha [exact])
+  tex#50    228x204  = classic/sheet-1-c.raw   (TGA 16bpp grey+alpha [exact])
+  tex#51    228x204  = classic/sheet-1-w.raw   (TGA 16bpp grey+alpha [exact])
+  tex#52    228x240  = metallic/sheet-0-c.raw   (TGA 16bpp grey+alpha [exact])
+  tex#53    228x240  = classic/sheet-0-w.raw   (TGA 16bpp grey+alpha [exact])
+  tex#54    228x204  = classic/sheet-1-c.raw   (TGA 16bpp grey+alpha [exact])
+  tex#55    228x204  = classic/sheet-1-w.raw   (TGA 16bpp grey+alpha [exact])
+
+  56 of 57 reproduce a shipped file exactly.
+  tex#56 320x240: no shipped file of that size gives 212021ff 212021ff efeff7ff
+      files of that size: ['desert/background.pix', 'images/menubg.raw', 'rainforest/background.pix', 'underwater/background.pix']

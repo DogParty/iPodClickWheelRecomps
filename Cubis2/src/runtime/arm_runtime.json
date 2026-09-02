@@ -1,0 +1,3 @@
+{
+  "_comment": "ARM C-library entries that are hand-written instead of recompiled, by guest address. Values are functions declared in src/runtime/arm_runtime.h; keys are also what makes a function `runtime` rather than `game` (see tools/recomp/functions.py). Empty is the goal and, for this title, the current state: the decoder models `mrs`/`msr` on the flag field, which is the only thing armcc's soft-float library needed that the Mini Golf emitter could not translate."
+}

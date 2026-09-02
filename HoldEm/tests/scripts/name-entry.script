@@ -1,0 +1,11 @@
+# Boot, then press Select five times, which takes the game from the title to its ENTER NAME
+# screen (analysis/coverage/name-entry-probe-frame1300.png is what the emulator shows there).
+# Recorded from the pinned emulator (tests/record.sh); checked by tests/diff.sh, and the
+# screenshot by tests/frames.sh.
+300: select
+500: select
+700: select
+900: select
+1100: select
+1300: shot
+1301: quit

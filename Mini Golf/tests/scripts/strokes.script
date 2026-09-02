@@ -1,0 +1,90 @@
+# Fourteen putts at hole 1 with the aim and the power varied, which is enough to reach the stroke
+# limit and be moved on to the next hole — and enough, on the way, to run half of the hole's state
+# machine that no other case reaches: the meter, the ball rolling and stopping, the stroke limit and
+# its message, the hole changing underneath the player.
+#
+# The ball never actually goes in. Sinking it needs an aim this cannot work out from here, so
+# `tick_holed` and `tick_sinking` are still the largest thing no case covers.
+#
+# Checked against the pure recompilation (tests/vs-recomp.sh), not against a recording.
+200: select
+300: wheel +240
+400: wheel +240
+500: wheel +24
+800: select
+1100: select
+1500: select
+2000: select
+2500: select
+3000: select
+3600: shot
+3700: select
+4200: shot
+4300: select
+4700: wheel +16
+5000: shot
+5100: select
+5400: select
+6000: shot
+6300: select
+7000: shot
+7200: select
+7600: wheel -8
+7900: select
+8200: select
+9000: shot
+9800: select
+9860: select
+10700: shot
+11000: wheel +8
+11200: select
+11320: select
+12100: shot
+12400: wheel -8
+12600: select
+12800: select
+13500: shot
+13800: wheel +16
+14000: select
+14040: select
+14900: shot
+15200: wheel -16
+15400: select
+15490: select
+16300: shot
+16600: wheel +24
+16800: select
+16950: select
+17700: shot
+18000: wheel -24
+18200: select
+18230: select
+19100: shot
+19400: wheel +4
+19600: select
+19840: select
+20500: shot
+20800: wheel -4
+21000: select
+21070: select
+21900: shot
+22200: wheel +12
+22400: select
+22510: select
+23300: shot
+23600: wheel -12
+23800: select
+23845: select
+24700: shot
+25000: wheel +20
+25200: select
+25380: select
+26100: shot
+26600: select
+26625: select
+27500: shot
+27800: wheel +8
+28000: select
+28130: select
+28900: shot
+29200: quit

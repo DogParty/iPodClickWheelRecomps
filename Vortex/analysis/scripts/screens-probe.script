@@ -1,0 +1,7 @@
+# Screens along a silent boot.
+300: shot
+600: shot
+1200: shot
+2400: shot
+3600: shot
+3600: quit

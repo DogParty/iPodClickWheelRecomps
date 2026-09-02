@@ -1,0 +1,59 @@
+# Framework ordinals Texas Hold'em reached in the emulator, and what the other two titles call them.
+# Columns: ordinal, calls in boot.script (600 frames, no input), calls in name-entry-probe.script
+# (1300 frames, five Select presses), then the name in Mini Golf's / Lost's imports.json.
+# 'unnamed' = neither title has met it; look it up in the pinned emulator's lib.rs and
+# ../Mini Golf/reference/reversing/*.json before naming it.
+
+AsyncFileIO#0         4      4   Mini Golf: afio_open / Lost: afio_open
+AsyncFileIO#1         4      4   Mini Golf: afio_close / Lost: afio_close
+AsyncFileIO#2        14     14   Mini Golf: afio_read / Lost: afio_read
+AsyncFileIO#3        32     32   Mini Golf: afio_open_alt / Lost: afio_open_alt
+Audio#0        27     27   Mini Golf: audio_sfx_create / Lost: audio_sfx_create
+Audio#7        27     27   Mini Golf: audio_sfx_set_buffer / Lost: audio_sfx_set_buffer
+Audio#8        27     27   Mini Golf: audio_sfx_set_field_08 / Lost: audio_sfx_set_field_08
+Audio#9        27     27   Mini Golf: audio_sfx_set_field_0c / Lost: audio_sfx_set_field_0c
+Audio#10       27     27   Mini Golf: audio_sfx_set_field_10 / Lost: audio_sfx_set_field_10
+Audio#11       27     27   Mini Golf: audio_sfx_set_field_14 / Lost: audio_sfx_set_field_14
+Audio#12       27     27   Mini Golf: audio_sfx_set_field_18 / Lost: audio_sfx_set_field_18
+Audio#17       27     27   Mini Golf: audio_sfx_set_state / Lost: audio_sfx_set_state
+Audio#18       27     27   Mini Golf: audio_sfx_set_field_3e / Lost: audio_sfx_set_field_3e
+Audio#40        2      2   Mini Golf: audio_stream_register / Lost: audio_stream_register
+Audio#43        1      1   Mini Golf: audio_stream_play / Lost: audio_stream_play
+Audio#45        1      1   Mini Golf: audio_zero / Lost: audio_zero
+Audio#48        1      1   Mini Golf: audio_stream_repeat / Lost: audio_stream_repeat
+Audio#50        1      1   unnamed
+Audio#51        1      1   Mini Golf: audio_zero / Lost: audio_zero
+Audio#52        1      1   Mini Golf: audio_query_ff / Lost: audio_query_ff
+Audio#55        1      1   Mini Golf: audio_zero / Lost: audio_zero
+Audio#56        3      3   Mini Golf: audio_zero / Lost: audio_zero
+InputEvents#0       602   1303   Mini Golf: input_poll / Lost: input_poll
+Metadata#62        1      1   Lost: metadata_now_playing_playlist
+Metadata#134       1      1   Lost: metadata_playlist_track_count
+OpenGLES#4      1887   3190   Mini Golf: gl_bind_texture / Lost: gl_bind_texture
+OpenGLES#12       69     69   Mini Golf: gl_clear / Lost: gl_clear
+OpenGLES#13        1      1   Mini Golf: gl_clear_color / Lost: gl_clear_color
+OpenGLES#19       21     21   Mini Golf: gl_compressed_tex_image_2d / Lost: gl_compressed_tex_image_2d
+OpenGLES#21        0      5   Mini Golf: gl_copy_tex_image_2d / Lost: gl_copy_tex_image_2d
+OpenGLES#35        1      1   unnamed
+OpenGLES#36     1768   3066   Mini Golf: gl_disable_vertex_attrib_array / Lost: gl_disable_vertex_attrib_array
+OpenGLES#37     1837   3135   Mini Golf: gl_draw_arrays / Lost: gl_draw_arrays
+OpenGLES#40     4276   7653   Mini Golf: gl_enable_vertex_attrib_array / Lost: gl_enable_vertex_attrib_array
+OpenGLES#45       50     50   unnamed
+OpenGLES#99       29     29   Mini Golf: gl_tex_image_2d / Lost: gl_tex_image_2d
+OpenGLES#125    1782   3016   Mini Golf: gl_uniform_matrix_4fv / Lost: gl_uniform_matrix_4fv
+OpenGLES#137    4276   7653   Mini Golf: gl_vertex_attrib_pointer / Lost: gl_vertex_attrib_pointer
+OpenGLES#148    1235   1752   unnamed
+OpenGLES#157     602   1303   Mini Golf: gl_swap_buffers / Lost: gl_swap_buffers
+OpenGLES#158    1204   2606   Mini Golf: gl_query_0x3000 / Lost: gl_query_0x3000
+OpenGLES#159    1184   2666   Mini Golf: gl_one / Lost: gl_one
+OpenGLES#169      69     96   unnamed
+OpenGLES#173      69    117   unnamed
+OpenGLES#175    1782   3016   Mini Golf: gl_mult_matrix / Lost: gl_mult_matrix
+Settings#0        10     10   Mini Golf: settings_get / Lost: settings_get
+miscTBD#0      1954   4393   Mini Golf: misc_alloc / Lost: misc_alloc
+miscTBD#1      1912   4351   Mini Golf: misc_free / Lost: misc_free
+miscTBD#6         1      1   Mini Golf: misc_device_level_get / Lost: misc_device_level_get
+miscTBD#9      1204   2606   Mini Golf: misc_clock / Lost: misc_clock
+miscTBD#10        0      6   Mini Golf: misc_thousand / Lost: misc_thousand
+miscTBD#11        0      6   Mini Golf: misc_zero / Lost: misc_zero
+miscTBD#14        2      2   Mini Golf: misc_resolve_name / Lost: misc_resolve_name

@@ -1,0 +1,10 @@
+# Function entries found by reading rather than by running.
+#
+# `tools/funcs.py` seeds the emitter from the three entry vectors, the live branch edges under
+# `coverage/`, and every word in the image that reads as a pointer into the code. What that
+# leaves out is a function whose address is *computed* — built into a table at run time — and
+# which no recorded session called. Such a function is invisible until `call_indirect` is handed
+# its address and stops the program, and this file is where the answer goes.
+#
+# One `0xADDRESS  why` per line. Empty so far: nothing has been reached that the three sources
+# above did not already find.

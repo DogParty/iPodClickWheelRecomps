@@ -1,0 +1,9 @@
+# Ordinals dropped from both logs by tests/diff.sh --exact, and why. Read by tests/diff.py --allow.
+#
+# miscTBD #12 is the host's wall clock. The emulator answers it with the real date and time of
+# the machine the recording was made on (reference/eapp-loader/lib.rs, Stub::HostTime) — its
+# --fixed-clock fixes the microsecond timer, not the calendar — and The Sims Bowling asks once
+# a frame into a stack slot the next frame's call logs as a leftover, so the seconds of the
+# minute the recording was made in are in every recording. The semantic comparison still sees
+# every one of these calls; only the exact one, which compares leftovers, drops them.
+miscTBD#12

@@ -1,0 +1,11 @@
+# How many detents move the Name Entry highlight one position: progressively larger single
+# bursts, a shot after each. -20 moved it two positions, -40 four (from A to the tick).
+600: select
+900: shot
+1000: wheel -20
+1100: shot
+1200: wheel -20
+1300: shot
+1400: wheel -40
+1500: shot
+1500: quit

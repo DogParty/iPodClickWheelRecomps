@@ -1,0 +1,19 @@
+image        HoldEm_1_1_2563291.bin
+             371924 bytes, loads at 0x18000000, ends 0x1805acd4
+vectors      0x180315c8 0x180315c4 0x18031624
+
+frameworks   (name, imported entries, the range their thunks occupy)
+  OpenGLES      179  0x18000064..0x1800032c
+  Filesytem       4  0x18000638..0x18000644
+  miscTBD        15  0x18000694..0x180006cc
+  Audio          61  0x18000748..0x18000838
+  Metadata      152  0x1800096c..0x18000bc8
+  AsyncFileIO    17  0x18000e68..0x18000ea8
+  InputEvents     2  0x18000f2c..0x18000f30
+  Settings        3  0x18000f78..0x18000f80
+  total         433
+
+reachable by walking the control flow from the entry vectors:
+  functions    872
+  instructions 51516
+  unwalkable   0

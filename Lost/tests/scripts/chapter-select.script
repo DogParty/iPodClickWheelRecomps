@@ -1,0 +1,25 @@
+# From a cold boot to Play ▸ Select Chapter, with the chapter menu open at the end.
+#
+# tests/cheats.sh runs this twice, with the unlock-all-chapters cheat and without, and reads the
+# chapter menu's eleven flag words out of guest memory on the last frame. There is no `shot` here
+# and there must not be: a script that takes one becomes a picture-oracle case (CMakeLists.txt),
+# and this route ends on a screen whose contents are the cheat's doing, which the emulator has no
+# opinion about.
+#
+# The first four lines are jungle.script's own way in — confirm the empty name, walk the main
+# menu three items left onto PLAY, and select twice, because the first of the two arrives while
+# the menu is still sliding into place and is swallowed.
+#
+# **`hold right 5` and not `wheel +8`.** A brief touch of the wheel's right side is a tap, which
+# this project turns into a flick after the finger lifts (src/runtime/main.cpp, `flick_after_tap`);
+# `wheel +8` queues eight detents a frame apart instead. On this screen, on a profile with no
+# saved game, the queued detents do not move the highlight at all and the tap does — measured,
+# not chosen, and the reason this case is worth having is that it is the only test that walks
+# that route.
+440: select
+480: wheel -24
+520: select
+620: select
+800: hold right 5
+1000: select
+1300: quit

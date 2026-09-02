@@ -1,0 +1,4 @@
+# Formatting for the Python tools. Run `python3 -m black tools/` before committing.
+[tool.black]
+line-length = 110
+target-version = ["py310"]

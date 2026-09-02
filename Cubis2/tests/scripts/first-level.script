@@ -1,0 +1,19 @@
+# The first oracle that plays (PLAN.md block 6). Select on NEW GAME, three Selects to type a
+# name — an empty name is refused, which is why they are here — then forty detents left to the
+# tick (ten a position, analysis/coverage/wheel-probe-*) and Select to accept it. That reaches
+# the NEW GAME options screen; Select starts the level. The board is an isometric grid of
+# coloured cubes over the underwater backdrop, and nothing touches the wheel from there on, so
+# the clock runs the level out on its own.
+600: select
+900: select
+1200: select
+1500: select
+1800: wheel -40
+2000: shot
+2200: select
+2500: shot
+3000: select
+3300: shot
+4000: shot
+5000: shot
+5000: quit

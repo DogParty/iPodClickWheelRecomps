@@ -1,0 +1,13 @@
+# Past ENTER NAME: type A, wheel back to the done glyph, Select; then Selects on what follows.
+3000: select
+3300: select
+3600: wheel -10
+3900: shot
+4000: select
+4300: shot
+4600: select
+4900: shot
+5200: select
+5500: shot
+6000: shot
+6000: quit

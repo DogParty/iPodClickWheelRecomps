@@ -1,0 +1,68 @@
+# Every framework ordinal the two probe recordings reach, with the name the five finished
+# trees give it. `unnamed` is work: an ordinal nobody implements still LOGS its call, so
+# the call-log oracle passes it by construction and only the picture can catch it — which
+# is exactly how this title's one grey-board defect stayed invisible for a whole boot.
+#
+# boot = analysis/scripts/boot-probe.script  (3 000 silent frames, the main menu)
+# play = analysis/scripts/play-probe.script  (a name typed, a level played, GAME STATS)
+# Both through tools/probe.sh against the pinned emulator (reference/MANIFEST.md).
+
+ordinal                  boot     play  name (and which of the five trees agree)
+AsyncFileIO#0              21       21  afio_open  [all five]
+AsyncFileIO#1              21       21  afio_close  [all five]
+AsyncFileIO#2              42       42  afio_read  [all five]
+AsyncFileIO#3              80       80  afio_open_alt  [all five]
+Audio#0                    21       21  audio_sfx_create  [all five]
+Audio#2                     0       20  audio_sfx_play  [all five]
+Audio#7                    21       21  audio_sfx_set_buffer  [all five]
+Audio#8                    21       21  audio_sfx_set_field_08  [all five]
+Audio#9                    21       21  audio_sfx_set_field_0c  [all five]
+Audio#10                   21       21  audio_sfx_set_field_10  [all five]
+Audio#11                   21       21  audio_sfx_set_field_14  [all five]
+Audio#12                   21       21  audio_sfx_set_field_18  [all five]
+Audio#13                    0       20  audio_sfx_set_field_1c  [all five]
+Audio#14                    0       20  audio_sfx_set_field_24  [all five]
+Audio#15                    0       20  audio_sfx_set_field_20  [all five]
+Audio#17                   21       21  audio_sfx_set_state  [all five]
+Audio#18                   21       21  audio_sfx_set_field_3e  [all five]
+Audio#23                   21       21  audio_sfx_get_field_04  [all five]
+Audio#40                    2        2  audio_stream_register  [all five]
+Audio#43                    1        3  audio_stream_play  [all five]
+Audio#45                    1        1  audio_zero  [all five]
+Audio#46                    0        1  audio_zero  [this tree only]
+Audio#48                    1        1  audio_stream_repeat  [all five]
+Audio#51                    1        1  audio_zero  [all five]
+Audio#52                    1        1  audio_query_ff  [all five]
+Audio#55                    1        1  audio_zero  [all five]
+Audio#56                    3        5  audio_zero  [all five]
+InputEvents#0            3002     6002  input_poll  [all five]
+Metadata#62                 1        1  metadata_now_playing_playlist  [Lost,HoldEm,Sims Bowling,Vortex]
+Metadata#134                1        1  metadata_playlist_track_count  [Lost,HoldEm,Sims Bowling,Vortex]
+OpenGLES#4              26149   256599  gl_bind_texture  [all five]
+OpenGLES#12                 2        2  gl_clear  [all five]
+OpenGLES#13                 2        2  gl_clear_color  [all five]
+OpenGLES#35                 1        1  gl_disable  [HoldEm,Sims Bowling,Vortex]
+OpenGLES#37             43498   321468  gl_draw_arrays  [all five]
+OpenGLES#40                 2        2  gl_enable_vertex_attrib_array  [all five]
+OpenGLES#99                57       57  gl_tex_image_2d  [all five]
+OpenGLES#101               57       57  gl_zero  [all five]
+OpenGLES#125            11572    41836  gl_uniform_matrix_4fv  [all five]
+OpenGLES#137            86996   636841  gl_vertex_attrib_pointer  [all five]
+OpenGLES#147                0   100348  gl_uniform_4x_scalar  [Lost,HoldEm,Sims Bowling,Vortex]
+OpenGLES#148            23144   194601  gl_uniform_4xv  [HoldEm,Sims Bowling,Vortex]
+OpenGLES#157             3002     6002  gl_swap_buffers  [all five]
+OpenGLES#158             3000     6000  gl_query_0x3000  [all five]
+OpenGLES#159            11572    41836  gl_one  [all five]
+OpenGLES#167                1        1  gl_ortho  [all five]
+Settings#0                  2        2  settings_get  [all five]
+miscTBD#0               19665    19804  misc_alloc  [all five]
+miscTBD#1                 124      139  misc_free  [all five]
+miscTBD#6                   1        1  misc_device_level_get  [all five]
+miscTBD#7                   1        1  misc_zero  [all five]
+miscTBD#9                9004    20510  misc_clock  [all five]
+miscTBD#10                  0       20  misc_thousand  [all five]
+miscTBD#12                  0     2506  misc_host_time  [all five]
+miscTBD#13                  0       13  misc_host_battery  [all five]
+miscTBD#14                  2        2  misc_resolve_name  [all five]
+
+# 56 ordinals reached. Named by no earlier tree: Audio#46 — see src/libeapp/imports.json.

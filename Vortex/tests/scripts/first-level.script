@@ -1,0 +1,15 @@
+# The first oracle that plays (PLAN.md block 6): a name typed and confirmed (A, then one
+# position back to the DONE glyph — eight detents a position), NEW GAME from the main menu, the
+# first level with the ball in play and nothing touching it, and the GAME OVER that follows.
+3000: select
+3300: select
+3600: wheel -8
+3900: shot
+4000: select
+4300: shot
+4600: select
+4900: shot
+5200: select
+5500: shot
+6500: shot
+6500: quit

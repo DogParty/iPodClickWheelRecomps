@@ -1,0 +1,34 @@
+# The main menu's three page screens: Volume, Statistics and Help, each opened and left.
+# Checked against the pure recompilation (tests/vs-recomp.sh), not against a recording.
+200: select
+300: wheel +240
+400: wheel +240
+500: wheel +24
+800: select
+1100: select
+1500: select
+2000: wheel +8
+2400: select
+3200: menu
+3800: wheel +16
+4200: select
+4500: shot
+4600: wheel +8
+4900: wheel +8
+5200: wheel -8
+5600: menu
+6200: wheel +8
+6600: select
+6900: shot
+7200: select
+7800: wheel +8
+8100: wheel +8
+8400: wheel +8
+8800: menu
+9200: wheel +8
+9600: select
+9900: shot
+10200: wheel +8
+10600: menu
+11200: menu
+11600: quit

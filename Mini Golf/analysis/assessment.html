@@ -1,0 +1,212 @@
+<title>Mini Golf Decomp Census</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#f7f8f4; --ink:#1b2420; --muted:#5a6660; --rule:#d8ddd6; --card:#ffffff;
+  --accent:#2c7a4b; --accent-ink:#1e5a37; --tint:#e6f0e8; --warn:#a1582b; --warn-tint:#f6ebe1;
+  --mono-bg:#eef1ec;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#141916; --ink:#e6eae5; --muted:#9aa59e; --rule:#2b352f; --card:#1b221e;
+    --accent:#5fbf85; --accent-ink:#8fd9aa; --tint:#1e2c24; --warn:#e0955f; --warn-tint:#2d221a;
+    --mono-bg:#1f2823;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141916; --ink:#e6eae5; --muted:#9aa59e; --rule:#2b352f; --card:#1b221e;
+  --accent:#5fbf85; --accent-ink:#8fd9aa; --tint:#1e2c24; --warn:#e0955f; --warn-tint:#2d221a;
+  --mono-bg:#1f2823;
+}
+body{background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:16px;line-height:1.55;margin:0}
+.wrap{max-width:880px;margin:0 auto;padding:48px 24px 96px}
+h1,h2,h3{font-family:"Bricolage Grotesque","IBM Plex Sans",sans-serif;text-wrap:balance;line-height:1.1;margin:0}
+h1{font-size:2.6rem;font-weight:700;letter-spacing:-.01em}
+h2{font-size:1.55rem;font-weight:700;margin-top:3rem;padding-top:1.25rem;border-top:1px solid var(--rule)}
+h3{font-size:1.1rem;font-weight:700;margin-top:1.75rem}
+p,li{max-width:68ch}
+.eyebrow{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-ink);font-weight:600;margin-bottom:.6rem}
+.lede{font-size:1.15rem;color:var(--muted);margin-top:.8rem;max-width:62ch}
+code,pre{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-size:.88em}
+code{background:var(--mono-bg);padding:.1em .35em;border-radius:3px}
+pre{background:var(--mono-bg);padding:14px 16px;border-radius:6px;overflow-x:auto;line-height:1.45;margin:1rem 0}
+pre code{background:none;padding:0}
+.figs{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:2rem 0 0}
+.fig{background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:14px 16px}
+.fig b{display:block;font-family:"Bricolage Grotesque",sans-serif;font-size:2rem;font-weight:700;line-height:1;color:var(--accent-ink);font-variant-numeric:tabular-nums}
+.fig span{font-size:.8rem;color:var(--muted)}
+.tbl{overflow-x:auto;margin:1rem 0}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+td.n{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+th.n{text-align:right}
+.note{background:var(--tint);border-left:3px solid var(--accent);padding:12px 16px;border-radius:0 6px 6px 0;margin:1.25rem 0}
+.caveat{background:var(--warn-tint);border-left:3px solid var(--warn);padding:12px 16px;border-radius:0 6px 6px 0;margin:1.25rem 0}
+.note p,.caveat p{margin:.3rem 0}
+ul,ol{padding-left:1.3rem}
+li{margin:.3rem 0}
+.routes{display:grid;gap:14px;margin-top:1rem}
+.route{background:var(--card);border:1px solid var(--rule);border-radius:6px;padding:16px 18px}
+.route h3{margin-top:0}
+.route .tag{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.rec{border-color:var(--accent)}
+small{color:var(--muted)}
+.layers{font-family:"IBM Plex Mono",monospace;font-size:.85rem;background:var(--mono-bg);padding:14px 16px;border-radius:6px;overflow-x:auto;white-space:pre;line-height:1.5}
+</style>
+
+<div class="wrap">
+<div class="eyebrow">iPod 5.5G · Minigolf_1_1_2563296.bin · measured 2026-08-20</div>
+<h1>Mini Golf Decomp Census</h1>
+<p class="lede">What it would take to turn the best-running iPod game into portable source, how many functions that is, and which route gets there without a compiler nobody has.</p>
+
+<div class="figs">
+  <div class="fig"><b>304</b><span>game functions to decompile (20 942 ARM insns ≈ 84 KB)</span></div>
+  <div class="fig"><b>65</b><span>framework ordinals Mini Golf calls — the host library surface</span></div>
+  <div class="fig"><b>0</b><span>Thumb instructions, floats in game code, C++ vtables in game code</span></div>
+  <div class="fig"><b>191</b><span>of 304 functions already run just reaching name entry</span></div>
+</div>
+
+<h2>Verdict</h2>
+<p>This is a <strong>moderate, well-bounded project</strong> — much smaller than a typical console decomp. The executable is 227 KB, of which only ~92 KB is code, and the code is C++ (armcc's C++ runtime is linked in — vtables, <code>Pure virtual fn called</code>) compiled by ARM's own <code>armcc</code> with 16.16 fixed-point arithmetic throughout. Ghidra decompiles every function cleanly (415 of 415, no failures) on a first, untyped pass. Everything the game asks of the outside world goes through 65 numbered import thunks whose semantics your <code>reversing/asyncfileio-abi.md</code> already documents and <code>eapp-loader</code> already implements in Rust.</p>
+<p><strong>Language: C++17 throughout.</strong> The original is C++, so hand decompilation recovers the game's classes directly; every target toolchain (Apple clang, MSVC, NDK, MinGW, devkitARM for 3DS) has full C++17. The emitter writes <code>.cpp</code> too, so there is no C/C++ boundary in the project. Runtime and generated layers use C++ as a better C (no exceptions, no RTTI, no hot-path allocation); the host library, platform layer, and hand-written code use idiomatic modern C++. The full code-quality rules — naming, commenting, structure, warnings-as-errors, sanitisers — are the first section of <code>PLAN.md</code> and bind every step of the work.</p>
+
+<p>A byte-matching build is <em>not</em> realistic and <em>not</em> necessary: the compiler is an ARM ADS/RVCT release you cannot license, and you already own something better than a matching build for verification — a deterministic emulator with scripted input that can emit the exact sequence of framework calls a session makes. That is the oracle the port should be tested against.</p>
+
+<h2>What the binary is</h2>
+<div class="tbl"><table>
+<tr><th>Region</th><th>Address range</th><th class="n">Size</th><th>What it is</th></tr>
+<tr><td>eApp header + descriptors</td><td><code>0x18000000–0x18000064</code></td><td class="n">100 B</td><td>magic <code>eapp</code>, entry vector table at +0x14 (entry <code>0x180188c0</code>, frame hook <code>0x1801891c</code>), six framework descriptors with MD5 interface hashes</td></tr>
+<tr><td>Import thunks</td><td><code>0x18000064–0x18000a3c</code></td><td class="n">2.5 KB</td><td>277 <code>ldr pc,[pc,#imm]</code> stubs: OpenGLES 179, Audio 61, AsyncFileIO 17, miscTBD 15, Settings 3, InputEvents 2</td></tr>
+<tr><td>ARM C runtime</td><td><code>0x18000a3c–0x18002c28</code></td><td class="n">8 KB</td><td>53 functions: heap (with the <code>$$$$ a^n + b^n = c^n | n&gt;2 $$$$</code> sentinel), <code>memcpy</code> <code>0x18001124</code>, <code>memset</code> <code>0x18001190</code>, <code>__rt_udiv</code> <code>0x18001468</code>, 64-bit divide <code>0x18000ba4</code>, signal/<code>__rt_raise</code> messages, semihosting <code>svc 0x123456</code></td></tr>
+<tr><td><strong>Game code</strong></td><td><code>0x18002c28–0x18018e40</code></td><td class="n">88 KB</td><td><strong>304 functions, 20 942 instructions.</strong> 100% ARM state, no <code>blx</code>, no VFP, no softfloat calls</td></tr>
+<tr><td>Read-only data</td><td><code>0x18019000–0x18030000</code></td><td class="n">92 KB</td><td>runtime messages, asset filenames (<code>c%02dbank/%01d.wav</code>, <code>jdmgp.sav</code>), and ~70 KB of bitmaps encoded as 16-level ASCII art (<code> #%'(*-.2357&lt;@DG</code> ramp) — sprites/glyphs baked as strings</td></tr>
+<tr><td>Data / BSS start</td><td><code>0x18030000–0x18037a1c</code></td><td class="n">31 KB</td><td>tables, globals (Ghidra sees 912 distinct globals), input flags word at <code>0x18037a0c</code></td></tr>
+</table></div>
+
+<h3>Compiler identification</h3>
+<p>The runtime strings <code>Pure virtual fn called</code>, <code>Redirect: can't open:</code>, <code>Out of heap memory</code>, <code>Heap memory corrupted</code>, <code>C++ library exception</code> and the heap sentinel above are ARM Ltd's C library as shipped with <strong>ARM Developer Suite 1.2 / RealView (RVCT 2.x)</strong> — not GCC. Matching that output requires that exact <code>armcc</code> build (plus its exact options), which is not obtainable legitimately. <code>decomp.me</code> hosts a handful of armcc/RVCT versions; pinning the version from the library's byte patterns would be the first task if anyone ever wanted a matching build. I would not spend the effort: see the verification section.</p>
+
+<h3>Code character (from the Ghidra pass)</h3>
+<ul>
+<li><strong>Fixed-point C.</strong> The biggest function (<code>0x1800a080</code>, 2 092 insns, the course renderer) is all <code>x * 0x10000</code>, <code>+ 0x2800000</code>, <code>0x1400000</code> — 16.16 screen coordinates handed to <code>glVertexAttribPointer</code> with type <code>GL_FIXED</code>. Ghidra's output contains zero <code>float</code>s. The only IEEE values are constants passed to <code>glClearColor</code>/ortho. No floating-point semantics to get wrong.</li>
+<li><strong>Not really C++.</strong> All 49 vtable-style indirect calls Ghidra found are in the ARM runtime (signal dispatch). Game code has 20 indirect call sites (function-pointer state tables at <code>0x180066a4–0x18006d3c</code> and the callback plumbing near the entry) and 25 <code>switch</code> jump tables. Straightforward to recover.</li>
+<li><strong>Heavy global state via base pointers.</strong> One literal base (<code>DAT_1800b040 + -0x370c</code> style) with signed offsets — i.e. a few big global structs. Naming those structs is the bulk of the typing work and pays off across every function.</li>
+<li><strong>354 assertion traps</strong> (<code>b .</code> self-branches) — release build with asserts compiled to spin. These become <code>assert()</code>; they are also free breadcrumbs for invariants.</li>
+<li><strong>Cheap at runtime.</strong> ~27 000 instructions per frame at the name-entry screen. Performance is not a reason to recompile; portability and ownership of the source are.</li>
+</ul>
+
+<h2>The function census</h2>
+<div class="tbl"><table>
+<tr><th>Bucket</th><th class="n">Functions</th><th class="n">Instructions</th><th>What happens to it in a port</th></tr>
+<tr><td>Import thunks</td><td class="n">58</td><td class="n">58</td><td>Vanish — become direct calls into the host library</td></tr>
+<tr><td>ARM C runtime</td><td class="n">53</td><td class="n">1 983</td><td>Replace with libc. Only 32 are called from game code and they reduce to ~10 semantics: memcpy, memset, strlen/strcpy family, udiv/sdiv/div64, malloc/free, printf-ish, and the init/exit shims</td></tr>
+<tr><td><strong>Game code</strong></td><td class="n"><strong>304</strong></td><td class="n"><strong>20 942</strong></td><td><strong>Decompile.</strong> 70 are under 10 insns, 96 are 10–25, 71 are 25–50, 68 are 50–100, 35 are 100–200, 12 are 200–500, 5 are over 500</td></tr>
+<tr><td>Total (Ghidra)</td><td class="n">415</td><td class="n">22 983</td><td></td></tr>
+</table></div>
+
+<p>Dynamic coverage, measured with the <code>--callgraph-dump</code> flag I added to <code>play</code> this session: five scripted sessions covering boot, asset load, the title, name entry and its menus reached <strong>191 of 304</strong> game functions (8 413 insns). The unreached 113 include all twelve largest functions — the course renderer, ball physics, hole/score flow and the pause menu — i.e. roughly 60% of the <em>instructions</em> are gameplay code that only a played hole exercises.</p>
+
+<div class="caveat">
+<p><strong>The emulator cannot currently get past name entry</strong>, which is what blocked a gameplay coverage number. Confirming the name (the ✓ cell) issues <code>AsyncFileIO #12</code> with a <code>0xc0debabe</code>-tagged request and <code>#14</code>, both answered with zero today, and the game stays on the screen. That is the "why is no save ever written" open item in the ABI notes, now with a reproducible trigger: <code>select</code>, scroll to ✓, <code>select</code>. Separately, wheel acceleration makes scripted bursts land nondeterministically; the script format wants a "move N cells" primitive.</p>
+</div>
+
+<h3>The five largest, for scale</h3>
+<div class="tbl"><table>
+<tr><th>Entry</th><th class="n">Insns</th><th class="n">Callees</th><th>Reading</th></tr>
+<tr><td><code>0x1800a080</code></td><td class="n">2 092</td><td class="n">33</td><td>course/scene draw: sets clear colour, pipeline, uniforms, builds fixed-point quad lists, texture binds</td></tr>
+<tr><td><code>0x18002c28</code></td><td class="n">1 354</td><td class="n">25</td><td>first game function after the runtime — likely the main state machine</td></tr>
+<tr><td><code>0x1800ecd8</code></td><td class="n">655</td><td class="n">49</td><td>highest fan-out: init / asset loading orchestration</td></tr>
+<tr><td><code>0x1800d1c4</code></td><td class="n">612</td><td class="n">7</td><td>few callees, long body — physics or collision arithmetic</td></tr>
+<tr><td><code>0x180154bc</code></td><td class="n">517</td><td class="n">5</td><td>same shape</td></tr>
+</table></div>
+
+<h2>The host surface Mini Golf actually needs</h2>
+<p>Static scan of every <code>B</code>/<code>BL</code> into the thunk arrays plus literal-pool references, reproducing §18.1's hand count exactly. 65 distinct ordinals, of which 44 were observed live in the probe sessions.</p>
+<div class="tbl"><table>
+<tr><th>Framework</th><th class="n">Used / published</th><th>Ordinals (call sites)</th></tr>
+<tr><td>OpenGLES</td><td class="n">20 / 179</td><td><code>#4</code> glBindTexture(9) <code>#12</code> glClear(3) <code>#13</code> glClearColor(4) <code>#19</code> glCompressedTexImage2D <code>#21</code> glCopyTexImage2D <code>#36</code>(8) <code>#37</code> glDrawArrays(4) <code>#40</code> glEnableVertexAttribArray(8) <code>#53</code> glGetError(24) <code>#84</code> glPixelStorei <code>#99</code> glTexImage2D <code>#101</code> glTexParameterf <code>#125</code> glUniformMatrix4fv <code>#137</code> glVertexAttribPointer(8) <code>#157</code> swap <code>#158</code> private enable <code>#159</code> pipeline select(5) <code>#165</code> loadIdentity(2) <code>#167</code> ortho <code>#175</code> multMatrix(3)</td></tr>
+<tr><td>Audio</td><td class="n">25 / 61</td><td>sound-engine handle table <code>#0 #1 #2 #7–#15 #17 #18 #23</code>; music player <code>#40 #42 #43 #45 #48</code>(repeat) <code>#51–#53 #55 #56</code></td></tr>
+<tr><td>miscTBD</td><td class="n">10 / 15</td><td><code>#0</code> alloc <code>#5 #6 #7</code> level trio <code>#9</code> µs clock(3) <code>#10</code>=1000 <code>#11</code>=0 <code>#12</code> wall clock <code>#13</code> battery <code>#14</code> resolve resource name</td></tr>
+<tr><td>AsyncFileIO</td><td class="n">8 / 17</td><td><code>#0 #1 #2 #3 #4 #12 #14 #16</code> — open/read/close with completion callbacks; <code>#12/#14</code> are the un-modelled save path</td></tr>
+<tr><td>InputEvents</td><td class="n">1 / 2</td><td><code>#0</code> poll (wheel position + five button bits)</td></tr>
+<tr><td>Settings</td><td class="n">1 / 3</td><td><code>#0</code> <code>"Language"</code> (word index) — Mini Golf does not ask for <code>TimeFormat</code></td></tr>
+</table></div>
+
+<div class="note">
+<p><strong>Across all 18 titles the surface is 161 ordinals</strong> (covscan), and 158 are already implemented in <code>eapp-loader</code>. So the library for <em>all</em> the games is about 2.5× the Mini Golf library, not 18×, and the Rust stubs are a working reference implementation to port from.</p>
+</div>
+
+<h3>Things in that surface that are harder than they look</h3>
+<ul>
+<li><strong>Music is AAC.</strong> <code>m0.m4a</code>–<code>m2.m4a</code> go through the iPod's own player (<code>Audio #40</code> + repeat mode). SDL has no AAC decoder. Options: AudioToolbox on Apple platforms, MediaCodec on Android, <code>fdk-aac</code>/ffmpeg on desktop, or a one-time transcode to Ogg/WAV at install (3DS would need this). SFX are plain <code>.wav</code> in <code>c00bank/</code> — trivial.</li>
+<li><strong>The GL is not GL.</strong> It is a 20-call subset with Apple-private entries: <code>#159</code> selects one of fifty fixed pipelines, <code>#148</code> is the modulate colour, vertices are 16.16 fixed, <code>GL_LUMINANCE_ALPHA</code> textures, bilinear sampling always on, no blend disable. Implementing this as a <em>textured-quad renderer</em> over any backend is far easier than pretending to be a GL driver, and it is the only design that also fits the 3DS.</li>
+<li><strong>Async file I/O with completion callbacks</strong> and an explicit request object (<code>REQ_CALLBACK</code>/<code>REQ_CONTEXT</code> offsets, the <code>arg0 == arg1 + 0x128</code> assertion). The port can satisfy this synchronously and fire the callback at the next frame pump, exactly as <code>play</code> does.</li>
+<li><strong>Input is a click wheel.</strong> Two mechanisms exist across titles (flag bits vs event-list nodes); Mini Golf uses flag bits only. A portable input layer needs "detents" and five buttons, mapped to keys/touch/analog per platform.</li>
+</ul>
+
+<h2>Three routes, and the one to take</h2>
+<div class="routes">
+<div class="route">
+<div class="tag">Route A · static recompilation</div>
+<h3>ARM → C translator, N64Recomp-style</h3>
+<p>Walk the 415 Ghidra functions, emit one C++ function per ARM function with a 16-register CPU struct and a flat memory array; thunk calls become direct calls into the host library. You already have the decoder (<code>arm7tdmi::disasm</code>) and know every quirk the titles hit. Produces a mechanical but <em>correct-by-construction</em> port of all 18 titles at once, in weeks. It is also the single best verification harness for Route B.</p>
+<p><small>Cost: ~1–2 weeks to first frame with this codebase. Output: not "source", but a portable binary.</small></p>
+</div>
+<div class="route">
+<div class="tag">Route B · manual decompilation</div>
+<h3>Ghidra-assisted rewrite into real C</h3>
+<p>304 functions. 237 of them are under 50 instructions and mostly read as finished C++ out of Ghidra once the globals and classes are typed. The 52 over 100 instructions are the real work — maybe two to five days each for the five giants. Realistic solo total, focused: <strong>6–10 weeks</strong> to a playable port, plus whatever time the library takes. With aggressive LLM assistance on the small functions, the tail shrinks a lot; the large ones still want a human reading the fixed-point math.</p>
+<p><small>Cost: months. Output: maintainable source you can actually port.</small></p>
+</div>
+<div class="route rec">
+<div class="tag">Route C · recommended</div>
+<h3>Recomp first, then replace function by function</h3>
+<p>Ship Route A so the game runs natively on macOS from day one, then swap recompiled functions for hand-written C++ one at a time. Every swap is verified by the oracle below. The host library is shared by both halves, so it is never throwaway work, and the port is always playable — you never have the "nothing works until everything works" cliff that kills decomp projects.</p>
+</div>
+</div>
+
+<h3>Verification without a matching compiler</h3>
+<p>Equivalence here is <em>behavioural</em>, and you can measure it precisely because every side effect the game has goes through the 65 ordinals. Define a session as (script of input events) → (ordered log of framework calls with arguments, plus framebuffer hashes at chosen frames). The emulator already produces that log; the port produces the same log from the same script. Diff them. When a hand-decompiled function replaces a recompiled one and the log is unchanged across the test scripts, it is correct for those paths. This is strictly stronger than "it looks right" and it is cheap — a name-entry session is 30 M instructions, under a second natively.</p>
+<p>It also answers the "how do I know I'm done" question: the call-graph dump tells you which functions a script reached, so test scripts can be grown until every one of the 304 functions has been executed under diff.</p>
+
+<h2>Library architecture for the cross-platform goal</h2>
+<p>Abstract at the level the games already abstract at — the eight framework ABIs — not at GL. The games never see a GL context; they see 179 numbered entries, and the interesting ones are not standard GL anyway. Below the ABI, a very small platform layer is all any new target has to write.</p>
+<div class="layers">game code (decompiled C, one .c per subsystem)         ← Route B output
+recompiled functions (generated C++)                  ← Route A output, shrinks over time
+────────────────────────────────────────────────────────────────
+ipod_eapp.h   — C ABI for the 8 frameworks, 161 entries, numbered
+              exactly as the thunks are (so recomp + decomp share it)
+────────────────────────────────────────────────────────────────
+eapp runtime  — framework semantics, platform-independent C:
+  gl subset   → quad list builder, pipeline table (§17), 16.16 → float
+  audio       → 4-voice SFX pool, music transport + repeat mode
+  asyncfileio → request objects, completion queue drained per frame
+  input       → detent counter, 5 button bits, both delivery mechanisms
+  misc/settings → clock, battery, language, alloc
+────────────────────────────────────────────────────────────────
+platform backend — what a port actually writes (~6 functions each):
+  present(quads[], textures)   window/surface, frame pump
+  mix(pcm)  decode(m4a)        file read/write in game dir
+  poll() → detents, buttons    clock, battery, locale
+  SDL3 + GL/Metal via SDL_GPU · SDL2 · Vulkan/MoltenVK · citro2d (3DS)</div>
+<p>Backend choice: start with <strong>SDL3</strong> — it gives you the window, audio device, input and file paths on macOS, iOS, Android, Windows and Linux from one codebase, and its GPU API or plain OpenGL handles a textured-quad renderer with no effort. Keep an SDL2 backend only if you need a platform SDL3 has dropped. Vulkan/MoltenVK buys nothing for 320×240 quad drawing; treat it as an optional backend, not the foundation. The 3DS has neither SDL3 nor GL, which is exactly why the backend boundary is "draw these quads", not "here is a GL context". Write the reference backend first as a software rasteriser — it is a port of the one in <code>lib.rs</code> and doubles as the bit-exact comparison target.</p>
+
+<h2>Tooling that exists as of this session</h2>
+<ul>
+<li><strong>Ghidra headless pipeline</strong> (scratchpad): <code>analyzeHeadless … -processor ARM:LE:32:v4t -loader-baseAddr 0x18000000 -postScript DumpFuncs.java</code> → <code>functions.tsv</code> (415 rows: entry, size, callers, callees, insns) and <code>decomp.c</code> (21 869 lines, all 415 functions). Same recipe works for the other 17 titles. The running GUI instance on port 8089 has no project open; the headless project is at <code>scratchpad/gproj/minigolf</code>.</li>
+<li><strong><code>play --callgraph-dump=FILE</code></strong> — new this session (uncommitted, in <code>play.rs</code> alongside your other uncommitted changes). Writes every taken branch edge; intersect the targets with <code>functions.tsv</code> for live coverage per script.</li>
+<li><code>covscan</code> (static ordinal coverage), <code>dis --base=0x18000000</code> (static reader for game code), <code>eapp-inspect</code> (header/descriptors) — all already in tree.</li>
+<li><code>/opt/devkitpro/devkitARM</code> has <code>arm-none-eabi-objdump</code>, which was enough for the layout scan; it cannot reproduce armcc output, so it is a reader, not a builder, for this project.</li>
+</ul>
+
+<h2>What to do first</h2>
+<ol>
+<li><strong>Unblock a played hole in the emulator</strong>: model <code>AsyncFileIO #12/#14</code> (the <code>0xc0debabe</code> request) so the ✓ confirm proceeds, and add a "move N cells" script primitive. Then record a gameplay script and get the coverage number for the remaining 113 functions. Everything downstream wants that script.</li>
+<li><strong>Freeze the ABI header</strong> — <code>ipod_eapp.h</code> generated from the descriptor tables plus the names in <code>opengles-names.json</code>/<code>framework-functions.json</code>. Both routes and the library compile against it.</li>
+<li><strong>Port the Rust stubs to the C++ runtime</strong> for Mini Golf's 65 ordinals, with a software-rasteriser backend and an SDL3 window. Test it by driving it from the emulator's call log (replay the log into the library, compare framebuffers) before any game code exists.</li>
+<li><strong>Write the ARM→C emitter</strong> over <code>arm7tdmi::disasm</code> and Ghidra's function list; link against the runtime; diff call logs against the emulator.</li>
+<li><strong>Start replacing functions</strong> — the runtime-library bucket first (free), then the 237 small functions, then the state machine, then the renderer and physics. Type the global structs early; the base-pointer addressing means one good struct definition cleans up dozens of functions at once.</li>
+</ol>
+<p><small>All numbers measured on <code>Games_RO/88888/Executables/Minigolf_1_1_2563296.bin</code> (227 868 bytes) with Ghidra 12.1.3 default ARM analysis; the function count will move a little once thunks are marked as externals and the 41 caller-less entries are confirmed as callbacks rather than dead code.</small></p>
+</div>

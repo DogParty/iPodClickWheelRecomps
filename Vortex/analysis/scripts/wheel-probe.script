@@ -1,0 +1,13 @@
+# Measuring the wheel on ENTER NAME: which letter each turn lands on.
+3000: select
+3300: wheel +1
+3500: shot
+3600: wheel +1
+3800: shot
+3900: wheel +3
+4100: shot
+4200: wheel -5
+4400: shot
+4500: wheel +10
+4700: shot
+4700: quit

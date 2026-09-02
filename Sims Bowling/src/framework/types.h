@@ -1,0 +1,16 @@
+// The types the framework speaks in — the shared core's, brought into this title's namespace.
+//
+// The definitions live in `recomps/common/src/ipod/framework/types.h` and are compiled once for
+// every title. This header exists so that nothing else in this tree has to know that: the include
+// path and the qualified names callers already write are unchanged, and `bowling` gains the names by
+// `using` rather than by alias, so it can still hold whatever is genuinely this title's.
+//
+// See ../../../common/README.md.
+#pragma once
+
+#include "ipod/framework/types.h"
+
+namespace bowling {
+using ::ipod::Float32Bits;
+using ::ipod::GuestAddress;
+}  // namespace bowling

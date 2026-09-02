@@ -1,0 +1,36 @@
+# Build output, at every level (each title's build/, Mini Golf's build-* variants,
+# the oracle emulators' cargo target/).
+build/
+build-*/
+target/
+__pycache__/
+
+# Anything derived from the original game binaries stays out of the repo.
+# A fresh clone regenerates all of it from the owner's own copy of each game:
+#   gen/               tools/funcs.py + tools/emit.py   (machine-translated code)
+#   tests/expected/    tests/record.sh                  (oracle call logs)
+#   analysis/coverage/ probe recordings                 (gameplay screenshots)
+#   analysis/ghidra/, objdump.txt                       (disassembly / decompilation)
+gen/
+**/tests/expected/
+objdump.txt
+
+# Same, but keeping the hand-written files that live alongside the derived ones.
+**/analysis/coverage/**
+!**/analysis/coverage/cov.py
+!**/analysis/coverage/session-notes.md
+**/analysis/ghidra/**
+!**/analysis/ghidra/mg-ordinals.json
+
+# The games themselves, wherever a copy lands.
+*.bin
+*.eapp
+
+# Original game artwork, packaged into the Switch port by the person building it.
+Mini Golf/src/platform/switch/icon.jpg
+
+# Save files written by play sessions.
+*.sav
+*.sav[0-9]
+
+.DS_Store

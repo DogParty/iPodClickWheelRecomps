@@ -1,0 +1,19 @@
+# Into the game itself: confirm the empty name, PLAY, START NEW GAME, and then the jungle.
+#
+# This is the picture oracle's case (tests/frames.sh). It exists because the call-log oracle was
+# identical to the emulator's for every one of these frames while the whole scene rendered as
+# colour noise: the scene backgrounds are 320x240 paletted textures in a format the uploader was
+# decoding as if its palette entries were twice the size they are.
+#
+# A menu row is eight detents, so -24 walks the highlight three items left, onto the tick.
+440: select
+480: wheel -24
+520: select
+620: select
+760: select
+900: shot
+1400: shot
+2000: shot
+2800: shot
+3600: shot
+3620: quit

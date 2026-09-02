@@ -1,0 +1,2 @@
+# Boot to the title screen with no input, then stop. Oracle for tests/expected/boot.calls.
+300: quit

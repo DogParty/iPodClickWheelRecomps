@@ -1,0 +1,18 @@
+image        Lost_1_1_2917525.bin
+             268140 bytes, loads at 0x18000000, ends 0x1804176c
+vectors      0x1803d498 0x1803d414 0x1803d4f4
+
+frameworks   (name, imported entries, the range their thunks occupy)
+  OpenGLES      179  0x18000064..0x1800032c
+  AsyncFileIO    17  0x18000638..0x18000678
+  Audio          61  0x180006fc..0x180007ec
+  InputEvents     2  0x18000920..0x18000924
+  Metadata      152  0x1800096c..0x18000bc8
+  miscTBD        15  0x18000e68..0x18000ea0
+  Settings        3  0x18000f1c..0x18000f24
+  total         429
+
+reachable by walking the control flow from the entry vectors:
+  functions    747
+  instructions 64408
+  unwalkable   0

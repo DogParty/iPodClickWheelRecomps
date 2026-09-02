@@ -1,0 +1,27 @@
+# Title -> name entry -> type a name and confirm -> the dialog -> main menu -> a sub-menu and
+# back. Single-row wheel gestures (8 detents) separated by enough frames to stay deterministic.
+200: select
+260: wheel +240
+330: wheel +240
+400: wheel +240
+500: select
+740: select
+1040: select
+1300: shot
+1340: wheel +16
+1500: shot
+1600: select
+1900: shot
+2000: select
+2300: shot
+2400: wheel +8
+2600: select
+2900: shot
+3000: menu
+3300: shot
+3400: wheel +8
+3600: select
+3900: shot
+4000: menu
+4300: shot
+4300: quit

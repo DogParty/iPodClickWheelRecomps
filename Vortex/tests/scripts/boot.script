@@ -1,0 +1,2 @@
+# A silent boot: the title screen is drawn by frame 300 and every file operation is done.
+600: quit

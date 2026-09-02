@@ -1,0 +1,46 @@
+# Play far enough in to have something worth saving, then Menu -> Save and Exit.
+#
+# No `shot` here on purpose. A script that takes screenshots also becomes a picture-oracle case
+# (see CMakeLists.txt), and this route is one the pinned emulator cannot follow to the end: it
+# hangs on the SAVING screen, because its `--frame-reason` is a fixed 1 and the request the game
+# makes there is exactly the one that reason overwrites. tests/save-and-exit.sh checks this run
+# against the game's own behaviour instead of against the emulator's.
+440: select
+480: wheel -24
+520: select
+620: select
+760: select
+1400: select
+1500: select
+1600: select
+1700: select
+1800: select
+1950: hold bottom 250
+2250: select
+2350: select
+2450: hold bottom 250
+2750: select
+2850: select
+
+# Menu, then sixteen rows right along the pause menu, which lands on SAVE AND EXIT.
+2950: menu
+3060: wheel +8
+3090: wheel +8
+3120: wheel +8
+3150: wheel +8
+3180: wheel +8
+3210: wheel +8
+3240: wheel +8
+3270: wheel +8
+3300: wheel +8
+3330: wheel +8
+3360: wheel +8
+3390: wheel +8
+3420: wheel +8
+3450: wheel +8
+3480: wheel +8
+3510: wheel +8
+3600: select
+
+# Far past the frame the game finishes on. Reaching this line is the failure this tests for.
+6000: quit

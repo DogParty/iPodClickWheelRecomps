@@ -1,0 +1,5 @@
+# Function entries found by reading the code rather than by running it: reached only through a
+# function pointer stored in the screen object, on paths no recorded session took.
+0x1800cf60  title_resume_or_menu — NEXT_ENTER target of the main menu's "resume" item
+# Ghidra ran this one into the function before it, so the pure recompilation could not call it.
+0x18014300  card_render — the save-game card's render, installed by game_save_enter

@@ -1,0 +1,16 @@
+# The path into play: Select on NEW GAME, three Selects to type a name, wheel back to the tick,
+# Select to accept it, then Selects on whatever follows, with the screen captured at each step.
+600: select
+900: select
+1200: select
+1500: select
+1800: wheel -40
+2000: shot
+2200: select
+2500: shot
+3000: select
+3300: shot
+4000: shot
+5000: shot
+6000: shot
+6000: quit

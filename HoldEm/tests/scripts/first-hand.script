@@ -1,0 +1,23 @@
+# Boot; Select from the title to ENTER NAME; eight more Selects spell AAAAAAAA, which fills the
+# name and puts the wheel on its "done" glyph; Select confirms it, and the START GAME menu
+# comes up (NEW GAME / TUTORIAL). Two more Selects deal the first hand: by frame 3500 the
+# player holds two cards at a six-seat table with the blinds posted and a $30 pot
+# (analysis/coverage/first-hand-frame3500.png), and the next Select continues the hand.
+# Recorded from the pinned emulator (tests/record.sh); checked by tests/diff.sh, and the
+# screenshot by tests/frames.sh.
+300: select
+500: select
+700: select
+900: select
+1100: select
+1310: select
+1510: select
+1710: select
+1910: select
+2110: select
+2500: select
+2900: select
+3300: select
+3500: shot
+3700: select
+3900: quit

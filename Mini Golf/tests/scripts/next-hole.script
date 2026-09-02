@@ -1,0 +1,57 @@
+# Title -> name entry -> New Game -> Single Player -> course 1 -> the controls page -> hole 1:
+# ten quick putts (select, select: the meter at its lowest) to the stroke limit, the message,
+# the wipe to hole 2, and the first putt there. Screenshots through the wipe.
+200: select
+300: wheel +240
+400: wheel +240
+500: wheel +24
+800: select
+1100: select
+1500: select
+2000: select
+2500: select
+3000: select
+3700: select
+4300: select
+4700: select
+4820: select
+5400: select
+5600: select
+5720: select
+6300: select
+6500: select
+6620: select
+7200: select
+7400: select
+7520: select
+8100: select
+8300: select
+8420: select
+9000: select
+9200: select
+9320: select
+9900: select
+10100: select
+10220: select
+10800: select
+11000: select
+11120: select
+11700: select
+11900: select
+12020: select
+12600: select
+12800: select
+12920: select
+13500: select
+13700: select
+13900: shot
+13960: shot
+14020: shot
+14080: shot
+14140: shot
+14500: shot
+14600: select
+15000: select
+15100: select
+15600: shot
+15700: quit

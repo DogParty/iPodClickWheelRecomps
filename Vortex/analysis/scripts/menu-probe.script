@@ -1,0 +1,12 @@
+# Esc (Menu) pressed on the main menu, and again on whatever it leads to.
+3000: select
+3300: select
+3600: wheel -8
+4000: select
+4300: shot
+4400: menu
+4700: shot
+5000: menu
+5300: shot
+5800: shot
+5800: quit

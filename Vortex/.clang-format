@@ -1,0 +1,44 @@
+# Formatting is mechanical so reviews are about substance. Run:
+#   /opt/homebrew/opt/llvm/bin/clang-format -i <files>   (or `cmake --build build --target format`)
+BasedOnStyle: LLVM
+Language: Cpp
+Standard: c++17
+IndentWidth: 4
+ColumnLimit: 100
+AccessModifierOffset: -4
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AlwaysBreakTemplateDeclarations: Yes
+BreakBeforeBraces: Attach
+DerivePointerAlignment: false
+PointerAlignment: Left
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex: '^"'          # this project's headers first
+    Priority: 1
+  - Regex: '^<SDL3/'     # third-party
+    Priority: 2
+  - Regex: '^<'          # standard library
+    Priority: 3
+SortIncludes: CaseSensitive
+SpacesBeforeTrailingComments: 2
+---
+# The macOS build's Objective-C++ (src/platform/sdl3/*.mm), formatted the same way. Cocoa's own
+# selectors are long, so its method declarations are left to wrap where clang-format wants them.
+Language: ObjC
+BasedOnStyle: LLVM
+Standard: c++17
+IndentWidth: 4
+ColumnLimit: 100
+AccessModifierOffset: -4
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+BreakBeforeBraces: Attach
+DerivePointerAlignment: false
+PointerAlignment: Left
+ObjCSpaceAfterProperty: false
+ObjCSpaceBeforeProtocolList: true
+SortIncludes: CaseSensitive
+SpacesBeforeTrailingComments: 2

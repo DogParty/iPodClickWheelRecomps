@@ -1,0 +1,5 @@
+{
+  "_comment": "ARM C-library entries that are hand-written instead of recompiled, by guest address. Keys are entries from gen/funcs.json; values are functions declared in src/runtime/arm_runtime.h. Everything not listed here is recompiled like game code.",
+  "0x18018b88": "soft_float_add",
+  "0x1800163c": "long_long_udiv"
+}

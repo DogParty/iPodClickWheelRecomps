@@ -1,0 +1,8 @@
+# The Volume item: the wheel scrolls the menu three rows to it, and the two buttons that
+# reach the volume setter (0x18029d4c, the first function the seed had missed).
+1000: wheel +22
+1200: next
+1400: next
+1600: prev
+1800: shot
+1900: quit

@@ -1,0 +1,11 @@
+[package]
+name = "arm7tdmi"
+version = "0.1.0"
+edition = "2021"
+description = "Pinned copy of the ARMv4T interpreter core (reference/arm7tdmi)"
+
+[dependencies]
+
+[lib]
+name = "arm7tdmi"
+path = "src/lib.rs"

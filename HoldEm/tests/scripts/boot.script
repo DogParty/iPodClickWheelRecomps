@@ -1,0 +1,4 @@
+# Boot with no input: the game loads its tables and textures, starts the title music and sits
+# in the attract loop. 600 frames is past the point where it is only redrawing itself.
+# Recorded from the pinned emulator (tests/record.sh); checked by tests/diff.sh.
+600: quit

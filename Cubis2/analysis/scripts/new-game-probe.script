@@ -1,0 +1,14 @@
+# Select on NEW GAME at the main menu, then Selects on whatever follows. This is the probe that
+# established that Select reaches Name Entry and that each further Select types a letter — and
+# that the tick does nothing until a name has been typed.
+600: select
+900: shot
+1200: select
+1500: shot
+1800: select
+2100: shot
+2400: select
+2700: shot
+3000: shot
+3600: shot
+3600: quit

@@ -1,0 +1,336 @@
+# Functions with a hand-written body in src/game/. tools/emit.py leaves these out of gen/.
+# One per line: address, then the name of the function that replaces it.
+0x180092bc  string_append
+0x180094a0  wide_string_append
+0x180188c0  app_entry
+0x180188bc  app_noop
+0x1801891c  app_frame
+0x180135c8  wheel_position_update
+0x18011644  wheel_position_update (wrapper)
+0x18013fac  input_snapshot_store
+0x18011528  input_snapshot_store (wrapper)
+0x18012d50  dispatch_buttons
+0x18018374  release_request
+0x1801842c  release_completed_requests
+0x18013690  input_snapshot_read
+0x180142bc  input_snapshot_clear_flags
+0x18014ccc  input_snapshot_clear_word_0
+0x18011538  game_update
+0x18015188  game_tick
+0x1800fddc  random_seed
+0x1800cb70  suspend
+0x1800e488  game_step
+0x1801140c  (hook, returns 1)
+0x180135ec  (hook, returns 1)
+0x18014bec  wheel_movement_apply
+0x18013f9c  buttons_apply
+0x18014bfc  prepare_step_input
+0x18012268  game_init
+0x18007510  reset_bss_head
+0x1800cd10  score_table_clear
+0x1800fcbc  slots_reset
+0x18013594  slot_allocate
+0x18014ce0  option_bits_set
+0x18006ecc  load_title_and_defaults
+0x18018b54  settings_language
+0x180141f0  settings_language (wrapper)
+0x180142d0  miscTBD #6 (wrapper)
+0x180142ac  Audio #56 (wrapper)
+0x1800ecd8  flow_step (state machine)
+0x180170fc  file_service_get
+0x18017864  file_request_prepare
+0x1801761c  file_begin (read)
+0x180176fc  file_begin (write)
+0x18017554  file_finished
+0x180177dc  file_status
+0x18017510  file_close
+0x180184cc  operator_new
+0x180184b4  operator_delete
+0x18018458  async_request_construct
+0x180183cc  async_request_setup_transfer
+0x180182c4  async_request_setup_operation (1)
+0x18018338  async_request_setup_operation (2)
+0x180183b0  async_request_attach
+0x1801812c  issue whole-file read
+0x180181e8  issue whole-file write
+0x18017fcc  issue positioned open
+0x18017f6c  transfer completion
+0x18017f00  open completion
+0x18017f34  operation_finish (from status)
+0x18017f98  operation_finish (result -1)
+0x180172e8  slot completion
+0x18016ee8  slot completion thunk (transfer)
+0x18016e98  slot completion thunk (open/continue)
+0x18009358  string_length
+0x18009560  wide_string_length
+0x18009314  string_copy
+0x1800950c  wide_string_copy
+0x18004068  screen_set
+0x180047cc  menu_sound_play
+0x18006cb4  title wrapper
+0x18006688  menu wrapper
+0x18005d0c  title_enter
+0x18012a00  title_tick
+0x1800561c  name_entry_enter
+0x180126e8  name_entry_handle_event
+0x18013f98  name entry tick (empty)
+0x180051d0  dialog_enter
+0x1800c8d0  menu_tick
+0x18012ed4  menu_open
+0x180104bc  menu_slide_out_begin
+0x18007830  text_width
+0x1800553c  main_menu_enter
+0x1800d058  main_menu_handle_event
+0x1800cfa8  statistics_handle_event
+0x1800cf60  title resume-or-menu (hand-found entry)
+0x180057d4  options_enter
+0x18005bc0  game_modes_enter
+0x180054bc  statistics_enter
+0x18005c40  hole_select_enter
+0x180118e4  hole_select_handle_event
+0x1801181c  game_modes_handle_event
+0x1800f7f0  options_handle_event
+0x18010654  dialog_handle_event
+0x18005980  course_select_enter
+0x18013760  course_select_handle_event
+0x18005874  pause_menu_enter
+0x1800e160  pause_menu_handle_event
+0x1801289c  title_render
+0x18012fa8  dialog_render
+0x1800c1dc  menu_render
+0x18013848  name_entry_render
+0x18014734  course_select_render
+0x1800291c  hole_enter
+0x180026ac  course_start
+0x18002968  score_card_open
+0x18005f54  page_enter
+0x18017130  file_open_completion
+0x18002c28  hole_tick
+0x1800a080  hole_render
+0x1800d1c4  ball_move
+0x18009f28  ball_step
+0x1800ce04  point_blocked
+0x18010588  trail_reset
+0x18014e44  integer_sqrt
+0x18007678  sine_degrees
+0x18015440  power_meter_value
+0x18015cec  hint_sequence_start
+0x180112c0  ball_to_tee
+0x18015050  surface_apply
+0x18012c0c  mesh_collide
+0x1800db70  ball_rest_record
+0x18011788  turn_resume
+0x18009fb8  panel_message_show
+0x18016654  buffer_construct
+0x180166dc  batcher_reset
+0x18016684  batcher_get
+0x18016a18  untextured_buffer_take
+0x18016a60  textured_buffer_take
+0x180164c8  rect_add
+0x1801631c  line_add
+0x18015ea4  quad_add
+0x18016984  rect_push
+0x18016894  line_push
+0x18016788  quad_push
+0x180160dc  buffer_flush
+0x18008de4  batcher_flush
+0x180071e4  rect_fill_at
+0x18007314  line_draw_at
+0x1800740c  textured_quad_push
+0x18008e9c  image_draw_at
+0x18014f4c  image_draw_clipped_at
+0x18007800  line_centre_x
+0x18007934  text_draw_at
+0x18007be8  glyph_draw_at
+0x18007d8c  text_draw_at
+0x18008040  text_layout
+0x1800e764  page_handle_event
+0x180109cc  panel_message_draw
+0x18010c3c  page_render
+0x1800e2ec  slider_draw
+0x18004d0c  panel_draw
+0x18005168  panel_draw_scaled
+0x18015300  line_rasterize
+0x18015258  edge_rasterize
+0x1800de88  tile_map_build
+0x18010280  sprite_sheets_load
+0x1801197c  hole_objects_prepare
+0x180043f4  hole_images_load
+0x18009908  hole_ball_place
+0x18009788  hole_setup
+0x180154bc  course_data_load
+0x1800e868  hole_layout_load
+0x1800f9b0  matrix_transform
+0x1800faf8  ground_camera_prepare
+0x18002ac4  course_unload
+0x18004a3c  save_record_snapshot
+0x18011de8  loading_render
+0x1800ead8  frame_render
+0x1801247c  score_entries_begin
+0x18009a98  arrow_draw_at
+0x1800e39c  object_transform
+0x18009d50  object_draw
+0x18011654  object_draw
+0x18004860  music_start
+0x180041fc  save_reset
+0x180042f4  course_images_load
+0x18014ee0  bit_read
+0x18009708  bits_read
+0x18014e9c  prefix_read
+0x180152d0  byte_write
+0x18006f7c  decompress
+0x180024d8  file_open
+0x1800254c  file_read
+0x180024c8  file_cursor
+0x180024bc  file_close
+0x1800261c  file_seek
+0x18008c44  resource_size
+0x18008868  resource_load
+0x18008af8  resource_open
+0x180089a8  resource_scratch_load
+0x1800906c  image_apply
+0x18008fac  texture_release
+0x1800fe28  tracked_allocate
+0x1800cd8c  tracked_free
+0x180105e4  ground_tile_blit
+0x18014f30  string_copy_n
+0x18009a7c  wide_string_copy_n
+0x180084ec  random_object_seed
+0x18008408  random_create
+0x18015d10  random_generate
+0x18008454  random_next
+0x1800ddc8  sound_effect_play
+0x1800de40  sound_slot_stop
+0x1801051c  sound_slot_release
+0x1800fc74  sound_slots_release_all
+0x18013fdc  music_level_adjust
+0x18014c08  brightness_adjust
+0x180140cc  battery_status
+0x180141a8  battery_query
+0x18011400  sound_voice
+0x18013588  music_engine_reset
+0x1800ddc4  music_stop_now
+0x18013688  title_audio_close
+0x180113fc  music_engine_open
+0x180113f8  music_track_play
+0x18012c00  time_query
+0x180142d4  backlight_on
+0x18014cfc  backlight_off
+0x18004a64  music_stop
+0x18004a5c  callback_ok
+0x1800409c  files_release
+0x1800881c  pack_close
+0x1800f7ac  tracked_free_all
+0x18008ac4  entry_width
+0x18008a90  entry_height
+0x180090c8  texture_from_pixels
+0x18008fcc  image_from_resource
+0x18008da8  object_assert
+0x18008448  object_assert_b
+0x18008dcc  object_rect_b_set
+0x18008db4  object_rect_a_set
+0x18004144  course_resume
+0x18004998  course_state_save
+0x18009e90  game_new
+0x18002758  hole_start
+0x18004a80  course_load_request
+0x18006ce4  page_tick
+0x18004b4c  dialog_tick
+0x180068fc  name_entry_tick
+0x18006afc  course_select_tick
+0x180136bc  card_handle_event
+0x18014300  card_render
+0x18014d10  game_save_enter
+0x18007744  font_create
+0x180077c4  font_destroy
+0x1800fe8c  fonts_load
+0x18009198  number_to_string
+0x1800937c  wide_number_to_string
+0x180113c8  matrix_mode_set
+0x18012bd0  matrix_load_identity
+0x1801218c  matrix_multiply
+0x1800eaa0  camera_matrix_load
+0x1800dd80  matrix_ortho
+0x1800cb9c  string_translate
+0x1800e68c  statistics_update
+0x180141f4  stats_path_build
+0x18014dc8  stats_write
+0x1800cd5c  stats_save
+0x18011414  app_exit
+0x1800853c  pack_tables_open
+0x18008664  pack_open
+0x18018734  array_construct
+0x18018664  array_construct_plain
+0x180185b8  array_construct_simple
+0x1800dcec  wheel_slot_set
+0x180082c4  input_gather
+0x180135f4  score_entry_request
+0x1800e644  slot_flags_from_table
+0x18013fc0  idle_suspend_notify
+0x1800cc30  language_code
+0x18018300  async_request_setup_positioned
+0x180182a4  operation_construct
+0x1801810c  async_request_issue
+0x18018078  operation_close
+0x18015e58  simple_file_open
+0x18015e2c  simple_file_write
+0x18015e8c  simple_file_close
+0x180184c0  operator_new_b
+0x180184a8  operator_delete_b
+0x18018644  lock_try
+0x18018660  lock_release
+0x18018570  terminate_handler
+0x1801856c  nop_1801856c
+0x18018558  guard_ok
+0x180135e4  callback_ok_b
+0x180113c4  tick_nothing
+0x18018574  atexit_register
+0x180177fc  file_slot_construct
+0x180178e0  file_service_construct
+0x18017000  file_write_begin
+0x180173bc  file_read_begin
+0x18017320  file_close_begin
+0x18017574  file_transfer_completed
+0x180174a8  file_close_completed
+0x18016f18  file_read_begin_wrapper
+0x180178ac  file_write_begin_wrapper
+0x18017490  file_finished_wrapper
+0x18017594  file_begin_read_wrapper
+0x180170cc  file_close_completed_wrapper
+0x18016ec8  file_open_completed
+0x18016f4c  file_open_positioned
+0x18016ab4  file_object_request_construct
+0x18016df0  file_object_construct
+0x18016b84  file_object_free
+0x18016abc  file_object_written
+0x18016e1c  file_object_written (alias)
+0x18016cb8  file_object_open
+0x18016e20  file_object_write
+0x18016ba0  file_object_completed
+0x18016ca0  file_object_completed (callback)
+0x18016dac  file_object_close
+0x18016e88  file_object_close (returning 0)
+0x18016e38  file_object_acquire
+0x180121f4  sound_slot_create
+0x1801224c  sound_slot_present
+0x18017930  sound_bank_finish
+0x18017ac0  sound_bank_advance
+0x180179c8  sound_bank_load
+0x18017d3c  sound_bank_header_read
+0x18017c70  sound_bank_data_read
+0x18017d14  sound_bank_header_read (callback)
+0x18017a98  sound_bank_data_read (callback)
+0x1800753c  file_record_open
+0x18007620  file_record_transfer
+0x180074d4  file_record_close
+0x18010860  score_file_begin
+0x1800fd0c  title_pack_open
+0x18008c78  renderer_create
+0x18004660  course_sounds_load
+0x18014b40  carousel_slide
+0x18014ba4  stream_register
+0x180182d8  async_request_setup_write
+0x1801834c  async_request_setup_read
+0x180186cc  file_objects_construct
+0x180186f4  request_records_construct
+0x180186e8  sound_bank_construct

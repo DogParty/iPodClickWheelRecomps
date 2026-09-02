@@ -1,0 +1,18 @@
+image        vortex_1_1_2563290.bin
+             414600 bytes, loads at 0x18000000, ends 0x18065388
+vectors      0x18021798 0x18021794 0x180217f4
+
+frameworks   (name, imported entries, the range their thunks occupy)
+  OpenGLES      179  0x18000064..0x1800032c
+  miscTBD        15  0x18000638..0x18000670
+  Audio          61  0x180006ec..0x180007dc
+  Metadata      152  0x18000910..0x18000b6c
+  AsyncFileIO    17  0x18000e0c..0x18000e4c
+  InputEvents     2  0x18000ed0..0x18000ed4
+  Settings        3  0x18000f1c..0x18000f24
+  total         429
+
+reachable by walking the control flow from the entry vectors:
+  functions    543
+  instructions 32317
+  unwalkable   0

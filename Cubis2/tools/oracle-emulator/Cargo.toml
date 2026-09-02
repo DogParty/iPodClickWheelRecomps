@@ -1,0 +1,24 @@
+# The oracle emulator: the emulator exactly as the recomp was written against it
+# (reference/MANIFEST.md), plus the --call-log instrument, built outside the emulator's workspace
+# so the recordings in tests/expected/ stay reproducible while the live emulator moves on.
+#
+#   cargo build --release --manifest-path tools/oracle-emulator/Cargo.toml --target-dir build/oracle-emulator
+[package]
+name = "eapp-loader"
+version = "0.1.0"
+edition = "2021"
+description = "Pinned copy of the emulator used to record the recomp's oracle logs"
+
+[workspace]
+
+[dependencies]
+arm7tdmi = { path = "arm7tdmi" }
+minifb = "0.27"
+
+[lib]
+name = "eapp_loader"
+path = "src/lib.rs"
+
+[[bin]]
+name = "play"
+path = "src/bin/play.rs"

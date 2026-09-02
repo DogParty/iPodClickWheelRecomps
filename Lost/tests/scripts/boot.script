@@ -1,0 +1,3 @@
+# Boot with no input: the game loads, shows the LOST title and settles on the name-entry screen.
+# 400 frames is past the point where the attract loop is only redrawing itself.
+400: quit

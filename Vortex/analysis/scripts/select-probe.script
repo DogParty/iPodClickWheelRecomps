@@ -1,0 +1,10 @@
+# One Select at the title screen, then a second on whatever it shows.
+3000: select
+3100: shot
+3400: shot
+3600: select
+3700: shot
+4000: shot
+4600: shot
+5400: shot
+5400: quit

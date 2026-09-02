@@ -1,0 +1,27 @@
+# Title -> name entry ("A", confirmed) -> main menu -> Options -> down to Cheats (the last row,
+# which this port adds) -> the Cheats screen, turning on Unlock courses and No stroke limit ->
+# Menu back to Options. The prefix through to Options is tests/scripts/options.script's.
+#
+# tests/cheats.sh runs this and checks the picture changed on the way in and that the two cheats
+# it turned on are in the file the game wrote.
+200: select
+300: wheel +240
+400: wheel +240
+500: wheel +24
+800: select
+1100: select
+1500: select
+2000: wheel +16
+2400: select
+2900: shot
+3000: wheel +48
+3600: select
+4100: shot
+4300: select
+4400: shot
+4800: wheel +8
+5000: select
+5300: shot
+5500: menu
+6000: shot
+6100: quit

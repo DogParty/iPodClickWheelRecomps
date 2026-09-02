@@ -1,0 +1,13 @@
+# Title -> name entry ("A", confirmed) -> main menu -> Exit. The game should end: the row asks
+# the firmware to put the eApp away, and this firmware has no menu to go back to.
+200: select
+300: wheel +240
+400: wheel +240
+500: wheel +24
+800: select
+1100: select
+1500: select
+2000: wheel +40
+2400: shot
+2600: select
+3200: shot

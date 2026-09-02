@@ -1,0 +1,279 @@
+{
+  "_comment": "Framework ordinal -> the name it is known by, and how many arguments it takes (r0-r3, then stack words). Two things read this file. tools/emit.py generates the pure recompilation's bindings against these names, which is why src/libeapp/arm_abi.cpp defines exactly them; tests/diff.py reads the argument counts so a call log is compared on the arguments the ordinal really takes and nothing else. An ordinal missing here logs and returns 0. Ordinals whose meaning is unknown are answered with a constant and listed with 0 arguments.",
+  "miscTBD": {
+    "0": {
+      "name": "misc_alloc",
+      "args": 1
+    },
+    "1": {
+      "name": "misc_free",
+      "args": 1
+    },
+    "5": {
+      "name": "misc_device_level_set",
+      "args": 1
+    },
+    "6": {
+      "name": "misc_device_level_get",
+      "args": 0
+    },
+    "7": {
+      "name": "misc_zero",
+      "args": 0
+    },
+    "9": {
+      "name": "misc_clock",
+      "args": 1
+    },
+    "10": {
+      "name": "misc_thousand",
+      "args": 0
+    },
+    "11": {
+      "name": "misc_zero",
+      "args": 0
+    },
+    "12": {
+      "name": "misc_host_time",
+      "args": 1
+    },
+    "13": {
+      "name": "misc_host_battery",
+      "args": 0
+    },
+    "14": {
+      "name": "misc_resolve_name",
+      "args": 4
+    }
+  },
+  "Settings": {
+    "0": {
+      "name": "settings_get",
+      "args": 3
+    }
+  },
+  "InputEvents": {
+    "0": {
+      "name": "input_poll",
+      "args": 2
+    }
+  },
+  "AsyncFileIO": {
+    "0": {
+      "name": "afio_open",
+      "args": 4
+    },
+    "1": {
+      "name": "afio_close",
+      "args": 1
+    },
+    "2": {
+      "name": "afio_read",
+      "args": 1
+    },
+    "3": {
+      "name": "afio_open_alt",
+      "args": 3
+    },
+    "4": {
+      "name": "afio_operation",
+      "args": 3
+    },
+    "12": {
+      "name": "afio_store_open",
+      "args": 3
+    },
+    "14": {
+      "name": "afio_store_close",
+      "args": 1
+    },
+    "16": {
+      "name": "afio_store_write",
+      "args": 3
+    }
+  },
+  "Audio": {
+    "0": {
+      "name": "audio_sfx_create",
+      "args": 2
+    },
+    "1": {
+      "name": "audio_sfx_release",
+      "args": 1
+    },
+    "2": {
+      "name": "audio_sfx_play",
+      "args": 1
+    },
+    "7": {
+      "name": "audio_sfx_set_buffer",
+      "args": 2
+    },
+    "8": {
+      "name": "audio_sfx_set_field_08",
+      "args": 2
+    },
+    "9": {
+      "name": "audio_sfx_set_field_0c",
+      "args": 2
+    },
+    "10": {
+      "name": "audio_sfx_set_field_10",
+      "args": 2
+    },
+    "11": {
+      "name": "audio_sfx_set_field_14",
+      "args": 2
+    },
+    "12": {
+      "name": "audio_sfx_set_field_18",
+      "args": 2
+    },
+    "13": {
+      "name": "audio_sfx_set_field_1c",
+      "args": 2
+    },
+    "14": {
+      "name": "audio_sfx_set_field_24",
+      "args": 2
+    },
+    "15": {
+      "name": "audio_sfx_set_field_20",
+      "args": 2
+    },
+    "17": {
+      "name": "audio_sfx_set_state",
+      "args": 2
+    },
+    "18": {
+      "name": "audio_sfx_set_field_3e",
+      "args": 2
+    },
+    "23": {
+      "name": "audio_sfx_get_field_04",
+      "args": 1
+    },
+    "40": {
+      "name": "audio_stream_register",
+      "args": 0
+    },
+    "42": {
+      "name": "audio_zero",
+      "args": 0
+    },
+    "43": {
+      "name": "audio_stream_play",
+      "args": 1
+    },
+    "45": {
+      "name": "audio_zero",
+      "args": 0
+    },
+    "48": {
+      "name": "audio_stream_repeat",
+      "args": 1
+    },
+    "51": {
+      "name": "audio_zero",
+      "args": 0
+    },
+    "52": {
+      "name": "audio_query_ff",
+      "args": 0
+    },
+    "53": {
+      "name": "audio_zero",
+      "args": 0
+    },
+    "55": {
+      "name": "audio_zero",
+      "args": 0
+    },
+    "56": {
+      "name": "audio_zero",
+      "args": 0
+    }
+  },
+  "OpenGLES": {
+    "4": {
+      "name": "gl_bind_texture",
+      "args": 2
+    },
+    "12": {
+      "name": "gl_clear",
+      "args": 1
+    },
+    "13": {
+      "name": "gl_clear_color",
+      "args": 4
+    },
+    "19": {
+      "name": "gl_compressed_tex_image_2d",
+      "args": 8
+    },
+    "21": {
+      "name": "gl_copy_tex_image_2d",
+      "args": 8
+    },
+    "36": {
+      "name": "gl_disable_vertex_attrib_array",
+      "args": 1
+    },
+    "37": {
+      "name": "gl_draw_arrays",
+      "args": 3
+    },
+    "40": {
+      "name": "gl_enable_vertex_attrib_array",
+      "args": 1
+    },
+    "53": {
+      "name": "gl_zero",
+      "args": 0
+    },
+    "84": {
+      "name": "gl_pixel_store",
+      "args": 2
+    },
+    "99": {
+      "name": "gl_tex_image_2d",
+      "args": 9
+    },
+    "101": {
+      "name": "gl_zero",
+      "args": 0
+    },
+    "125": {
+      "name": "gl_uniform_matrix_4fv",
+      "args": 4
+    },
+    "137": {
+      "name": "gl_vertex_attrib_pointer",
+      "args": 6
+    },
+    "157": {
+      "name": "gl_swap_buffers",
+      "args": 0
+    },
+    "158": {
+      "name": "gl_query_0x3000",
+      "args": 0
+    },
+    "159": {
+      "name": "gl_one",
+      "args": 0
+    },
+    "165": {
+      "name": "gl_load_identity",
+      "args": 1
+    },
+    "167": {
+      "name": "gl_ortho",
+      "args": 7
+    },
+    "175": {
+      "name": "gl_mult_matrix",
+      "args": 3
+    }
+  }
+}

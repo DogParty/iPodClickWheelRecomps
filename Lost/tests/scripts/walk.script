@@ -1,0 +1,29 @@
+# Walking: the one thing this game does with the wheel that a menu does not.
+#
+# `hold <side> [frames]` pins a finger to one side of the wheel, which is what holding one of the
+# four Touch keys does. The game teaches this itself — it draws the wheel with its lower quarter
+# lit and says TOUCH THE LOWER SIDE OF THE WHEEL TO MAKE JACK MOVE DOWNWARDS — and then answers
+# EXCELLENT! when he does, which is the game confirming the direction rather than this project
+# asserting it. The last screenshot is that moment.
+#
+# The five selects clear the opening dialogue; movement is refused until it is done.
+#
+# No screenshot is taken while the tutorial's wheel is on screen, and that is deliberate rather
+# than convenient: that overlay is the one thing this project and the emulator disagree about
+# (PLAN.md, the day's last entry), so a comparison there would be measuring a known open question
+# instead of this feature.
+440: select
+480: wheel -24
+520: select
+620: select
+760: select
+1400: select
+1500: select
+1600: select
+1700: select
+1800: select
+1950: hold bottom 200
+2200: shot
+2250: hold bottom 200
+2500: shot
+2520: quit

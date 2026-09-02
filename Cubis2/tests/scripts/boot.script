@@ -1,0 +1,2 @@
+# A silent boot: the main menu is drawn by frame 500 and the boot's file operations are done.
+600: quit
