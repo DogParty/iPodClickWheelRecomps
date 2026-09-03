@@ -111,7 +111,7 @@ BODY
     ;;
 esac
 
-cat <<FOOTER
+cat <<'FOOTER'
 CONTROLS
 --------
 
