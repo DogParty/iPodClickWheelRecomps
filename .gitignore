@@ -27,6 +27,10 @@ objdump.txt
 !**/analysis/ghidra/mg-ordinals.json
 **/reference/research/
 
+# Internal planning docs, kept out of the public repo.
+**/PLAN.md
+NEW-RECOMP.md
+
 # The games themselves, wherever a copy lands.
 *.bin
 *.eapp
