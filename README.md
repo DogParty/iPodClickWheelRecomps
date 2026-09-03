@@ -19,7 +19,7 @@ Every game needs its own *decrypted* game files, taken from your own copy. Nothi
 
 Each game's folder has its own README with details on how to build it, how it was decompiled, what is still recompiled rather than rewritten, and how to run it.
 
-## The games
+## The Games
 
 | Folder | Platforms | Game folder |
 |---|---|---|
@@ -63,9 +63,9 @@ Of course we have to actually improve these 20 year old games! Some improvements
 |---|---|
 | ![The Sims Bowling](docs/screenshots/sims-bowling.png) | ![Texas Hold'em](docs/screenshots/texas-holdem.png) |
 
-## AI disclosure
+## AI Disclosure
 
-Look, I've been a software developer for over 15 years now. I have a full time job, a family, and a full life. I wish I could tell you that I spent years reverse engineering games from a never-before-reversed platform like the iPod but that would be a lie. I heavily relied on Claude for this project. It has still taken me weeks to get to this point and a lot of real direction from a real SWE (for example, "I'm noticing magenta on the edges of the assets in this menu, I imagine that should be an alpha value we're not parsing correctly. Can you decompile the original code's graphics call on the menu and veridy the color channel it's using").
+Look, I've been a software developer for over 15 years now. I have a full time job, a family, and a full life. I wish I could tell you that I spent years reverse engineering games from a never-before-reversed platform like the iPod but that would be a lie. I heavily relied on Claude for this project. It has still taken me weeks to get to this point and a lot of real direction from a real SWE (for example, "I'm noticing magenta on the edges of the assets in this menu, I imagine that should be an alpha value we're not parsing correctly. Can you decompile the original code's graphics call on the menu and verify the color channel it's using").
 
 If that's not enough for you then that's okay. It's enough for me and hopefully someone else out there. At the end of the day, this project represents a world first: iPod Classic games running on modern operating systems. I would much rather have the project exist than not. 
 
