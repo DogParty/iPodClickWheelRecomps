@@ -23,8 +23,8 @@ the live tree if the two disagree.
 
 | what | taken from | at |
 |---|---|---|
-| `tools/oracle-emulator/src/` | `ipod-emulator/tools/eapp-loader/src/` | commit `96bfe90`, 2026-08-28, **plus one instrument and two fixes** (below), all three uncommitted in the live tree at the time of the pin |
-| `tools/oracle-emulator/arm7tdmi/` | `ipod-emulator/tools/arm7tdmi/` | commit `96bfe90` |
+| `tools/oracle-emulator/src/` | `<upstream>/tools/eapp-loader/src/` | commit `96bfe90`, 2026-08-28, **plus one instrument and two fixes** (below), all three uncommitted in the live tree at the time of the pin |
+| `tools/oracle-emulator/arm7tdmi/` | `<upstream>/tools/arm7tdmi/` | commit `96bfe90` |
 | `tools/oracle-emulator/Cargo.toml`, `Cargo.lock` | the Vortex recomp's (itself the Sims Bowling's, itself Hold'em's, itself Lost's), unchanged | — |
 | `tools/oracle-emulator/arm7tdmi/Cargo.toml` | the emulator's, with `version.workspace = true` replaced by `version = "0.1.0"` — there is no workspace above the pinned copy to inherit from | commit `96bfe90` |
 
@@ -67,7 +67,7 @@ carries the identical tolerance, and Mini Golf's second oracle — which compare
 builds and is therefore the strictest reader of a rasteriser change — is green on it.
 
 None of the three changes is this folder's to keep: all were made in the live tree
-(`ipod-emulator/tools/eapp-loader/src/`) and copied here, and both are the live tree's to commit.
+(`<upstream>/tools/eapp-loader/src/`) and copied here, and both are the live tree's to commit.
 Every other flag the recordings use (`--call-log`, `--script`, `--callgraph-dump`,
 `--fixed-clock`, `--fps=0`, `--load-on-open`, `--allow-creates`, `--ctx-seed`) was already in the
 emulator, and so is the per-title defaults table in `play.rs` — which gives a binary named

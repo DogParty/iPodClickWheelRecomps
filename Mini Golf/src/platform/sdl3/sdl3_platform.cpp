@@ -9,10 +9,10 @@
 // change in Settings ▸ Input.
 //
 // The defaults, all rebindable:
-//   ← / →                  turn the click wheel (one row a press)
+//   ← / →                  turn the click wheel (one row a press; held, it keeps turning)
 //   Space                  Select (centre button)
 //   ↑                      Menu    [  Previous    ↓  Play/Pause    ]  Next
-//   P                      screenshot  Q  quit
+//   P                      screenshot  Q  quit   ⌘, (Ctrl+, off a Mac)  settings
 //   - / =                  step the window through whole multiples; F or F11 full screen
 // and on a gamepad, all rebindable too:
 //   left stick             turns the wheel, by as much as it is pushed
@@ -24,9 +24,9 @@
 // `music_decoder.h`'s job, and it is the only part of the audio that is per-platform.
 #include "platform/input_bindings.h"
 #include "platform/platform.h"
-#include "platform/sdl3/macos_settings.h"
 #include "platform/sdl3/music_decoder.h"
 #include "platform/sdl3/sdl3_gamepad.h"
+#include "platform/sdl3/settings_window.h"
 
 #include <SDL3/SDL.h>
 
@@ -49,6 +49,24 @@ constexpr int WINDOW_SCALE = 3;
 // scripts turn it in eights for exactly this reason), so a key press is worth a row. One detent a
 // press meant eight presses per letter.
 constexpr int DETENTS_PER_ROW = 8;
+
+// A wheel key held down keeps the wheel turning, as a thumb resting on it would. The press
+// itself is a tap — one row — and nothing more for a moment, so that a tap stays a tap; then the
+// wheel turns steadily, at the rate a stick pushed all the way over turns it (sdl3_gamepad.cpp),
+// until the key comes up. The keyboard's own auto-repeat used to stand in for this, and it made
+// a poor wheel: it arrived at the system's rate rather than the frame's, a whole row a repeat,
+// which is several times faster than the game reads the wheel — so a long hold left a queue of
+// turns the aim was still working through after the key had come up.
+constexpr float HOLD_DELAY_SECONDS = 0.25f;
+constexpr float HOLD_DETENTS_PER_SECOND = 48.0f;
+
+// The modifier that, with comma, opens the settings window: the Command key on a Mac, where
+// ⌘, is what every application uses, and Control elsewhere.
+#if defined(__APPLE__)
+constexpr SDL_Keymod SETTINGS_MODIFIER = SDL_KMOD_GUI;
+#else
+constexpr SDL_Keymod SETTINGS_MODIFIER = SDL_KMOD_CTRL;
+#endif
 
 // The keys offered in the settings window. F, F11, L, P and Q are left out: they are the window's
 // own and the program's, and a player who bound one would lose the shortcut. Escape is offered —
@@ -307,8 +325,10 @@ private:
             (void)SDL_SetAudioStreamGain(stream_, gain_);
         }
         spec_ = spec;
+        // The format is masked as unsigned inside SDL's macro; GCC wants the enum widened first.
         bytes_per_frame_ =
-            static_cast<int>(SDL_AUDIO_BYTESIZE(spec.format)) * static_cast<int>(spec.channels);
+            static_cast<int>(SDL_AUDIO_BYTESIZE(static_cast<unsigned>(spec.format))) *
+            static_cast<int>(spec.channels);
         buffer_.assign(static_cast<size_t>(CHUNK_FRAMES) * static_cast<size_t>(bytes_per_frame_),
                        0);
         return true;
@@ -420,7 +440,8 @@ public:
         hooks.pixel_perfect = settings().pixel_perfect;
         hooks.render_scale = settings().render_scale;
         hooks.context = this;
-        macos_settings_install(hooks);
+        hooks.game_window = window_;
+        settings_window_install(hooks);
         ensure_texture(SCREEN_WIDTH, SCREEN_HEIGHT);
         apply_presentation();
         // Show black until the game has drawn something.
@@ -473,12 +494,13 @@ public:
                 input.quit = true;
                 break;
             case SDL_EVENT_KEY_DOWN:
-                // Command-comma opens the settings window. The menu item carries the same
+                // Command-comma opens the settings window on macOS, where every application
+                // keeps it; Control-comma everywhere else. The Mac menu item carries the same
                 // shortcut, but whether a key equivalent reaches the menu depends on how the
                 // window that has focus was made; handling it here works either way.
-                if (event.key.key == SDLK_COMMA && (event.key.mod & SDL_KMOD_GUI) != 0 &&
+                if (event.key.key == SDLK_COMMA && (event.key.mod & SETTINGS_MODIFIER) != 0 &&
                     !event.key.repeat) {
-                    macos_settings_open();
+                    settings_window_open();
                     break;
                 }
                 // Backspace and Return belong to whatever is being typed. Neither is offered in
@@ -511,12 +533,23 @@ public:
                     step_window_scale(1);
                 }
                 break;
+            case SDL_EVENT_KEY_UP:
+                release_bound_input(static_cast<InputCode>(event.key.key));
+                break;
             case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
                 // A gamepad button is looked up in the same table a key is; a pad has no key
                 // repeat, so every press is a fresh one.
                 (void)handle_bound_input(
                     gamepad_code(static_cast<SDL_GamepadButton>(event.gbutton.button)), false,
                     input);
+                break;
+            case SDL_EVENT_GAMEPAD_BUTTON_UP:
+                release_bound_input(
+                    gamepad_code(static_cast<SDL_GamepadButton>(event.gbutton.button)));
+                break;
+            case SDL_EVENT_WINDOW_FOCUS_LOST:
+                // The release of a key held while the focus went elsewhere never arrives.
+                held_wheel_.clear();
                 break;
             case SDL_EVENT_GAMEPAD_ADDED:
             case SDL_EVENT_GAMEPAD_REMOVED:
@@ -539,6 +572,7 @@ public:
         // a position, not a press, and what the wheel wants to know is how far it is being held
         // over right now.
         input.wheel_detents += gamepads_.wheel_detents(settings().frame_rate);
+        input.wheel_detents += held_wheel_detents(settings().frame_rate);
         service_audio();
     }
 
@@ -671,11 +705,21 @@ public:
             const std::unique_ptr<std::shared_ptr<Answer>> held(
                 static_cast<std::shared_ptr<Answer>*>(userdata));
             Answer& result = **held;
-            if (files != nullptr && files[0] != nullptr) {
+            if (files == nullptr) {
+                // The dialog could not be shown at all. SDL's error is per thread, and this
+                // may not be the thread `choose_file` waits on, so it is taken here.
+                result.error = SDL_GetError();
+            } else if (files[0] != nullptr) {
                 result.path = files[0];
             }
             result.done.store(true, std::memory_order_release);
         };
+        // The dialog belongs to the game's window, and the system puts it where that window is:
+        // behind a terminal, on a machine where the program was started from one, unless the
+        // window is brought forward first. The console is told as well, since a dialog nobody
+        // can see looks exactly like a program that has stopped.
+        SDL_RaiseWindow(window_);
+        std::fprintf(stderr, "%s: opening the file browser\n", prompt.c_str());
         const SDL_DialogFileFilter filters[] = {{prompt.c_str(), extension.c_str()}};
         SDL_ShowOpenFileDialog(on_chosen, new std::shared_ptr<Answer>(answer), window_, filters, 1,
                                nullptr, false);
@@ -684,6 +728,10 @@ public:
             if (SDL_WaitEventTimeout(&event, 50) && event.type == SDL_EVENT_QUIT) {
                 return false;  // the answer stays alive for the callback that has not come yet
             }
+        }
+        if (!answer->error.empty()) {
+            std::fprintf(stderr, "the file browser could not be opened: %s\n",
+                         answer->error.c_str());
         }
         chosen_path = answer->path;
         return !chosen_path.empty();
@@ -695,6 +743,7 @@ private:
     struct Answer {
         std::atomic<bool> done{false};
         std::string path;
+        std::string error;  // why there was no dialog, when there was none
     };
 
     // The keys a settings window may offer. Naming them here rather than asking the player to
@@ -784,7 +833,7 @@ private:
     // One input the player has bound, whatever produced it — a key or a gamepad button. They
     // take the same path because they mean the same thing: an `InputCode` in the one table.
     // True when it did something, so the caller knows not to offer it to anything else.
-    static bool handle_bound_input(InputCode code, bool repeat, FrameInput& input) {
+    bool handle_bound_input(InputCode code, bool repeat, FrameInput& input) {
         Action action = Action::Select;
         const bool bound = input_bindings().action_for(code, action);
         if (trace_input() && !repeat) {
@@ -794,12 +843,14 @@ private:
         if (!bound) {
             return false;
         }
-        if (action == Action::SwipeLeft) {
-            input.wheel_detents -= DETENTS_PER_ROW;
-            return true;
-        }
-        if (action == Action::SwipeRight) {
-            input.wheel_detents += DETENTS_PER_ROW;
+        if (action == Action::SwipeLeft || action == Action::SwipeRight) {
+            // The press is a row at once; the hold is paced by the frame from here on
+            // (held_wheel_detents), so the system's auto-repeat has nothing to add.
+            if (!repeat) {
+                const int direction = action == Action::SwipeLeft ? -1 : 1;
+                input.wheel_detents += direction * DETENTS_PER_ROW;
+                wheel_hold_begin(code, direction);
+            }
             return true;
         }
         if (!repeat) {  // a held button is one press
@@ -808,10 +859,52 @@ private:
         return true;
     }
 
+    // A wheel key has gone down. The wheel follows the newest one held, and the wait before it
+    // starts turning begins again — a fresh press is a fresh tap.
+    void wheel_hold_begin(InputCode code, int direction) {
+        release_bound_input(code);  // a press whose release was never seen
+        held_wheel_.push_back({code, direction});
+        wheel_hold_frames_ = 0;
+        wheel_hold_carry_ = 0.0f;
+    }
+
+    // An input has come up. Only the wheel keys care: a button press is over in the frame it
+    // happened, but a wheel key turns the wheel until it is let go. Looked up by code rather
+    // than by action, so a key rebound while it is held still comes up cleanly.
+    void release_bound_input(InputCode code) {
+        held_wheel_.erase(
+            std::remove_if(held_wheel_.begin(), held_wheel_.end(),
+                           [code](const HeldWheelKey& key) { return key.code == code; }),
+            held_wheel_.end());
+    }
+
+    // What the wheel keys being held are worth this frame: nothing while the wait after a press
+    // runs, then a steady rate, with the fraction of a detent left over carried into the next
+    // frame rather than dropped, as the stick's is.
+    int held_wheel_detents(unsigned frames_per_second) {
+        if (held_wheel_.empty()) {
+            wheel_hold_frames_ = 0;
+            wheel_hold_carry_ = 0.0f;
+            return 0;
+        }
+        // An unlocked frame rate has no fixed step to divide by; the game's own timebase is what
+        // the rest of the program assumes when it needs a number (runtime/main.cpp).
+        const float rate = frames_per_second != 0 ? static_cast<float>(frames_per_second) : 60.0f;
+        ++wheel_hold_frames_;
+        if (static_cast<float>(wheel_hold_frames_) < HOLD_DELAY_SECONDS * rate) {
+            return 0;
+        }
+        wheel_hold_carry_ +=
+            static_cast<float>(held_wheel_.back().direction) * HOLD_DETENTS_PER_SECOND / rate;
+        const float whole = std::trunc(wheel_hold_carry_);
+        wheel_hold_carry_ -= whole;
+        return static_cast<int>(whole);
+    }
+
     // A key press: what it is bound to first, then the two keys that are not the device's — a
     // screenshot and quitting — which are fixed, because they are the program's rather than the
     // game's.
-    static bool handle_key(SDL_Keycode key, bool repeat, FrameInput& input) {
+    bool handle_key(SDL_Keycode key, bool repeat, FrameInput& input) {
         if (handle_bound_input(static_cast<InputCode>(key), repeat, input)) {
             return true;
         }
@@ -867,7 +960,7 @@ private:
         }
         next_frame_ns_ =
             SDL_GetTicksNS();  // pace from now, not from where the unlocked run left off
-        macos_settings_set_frame_rate(rate);
+        settings_window_set_frame_rate(rate);
         save_settings();
     }
 
@@ -902,7 +995,7 @@ private:
         next_frame_ns_ = SDL_GetTicksNS();
         apply_presentation();
         set_title_now();
-        macos_settings_set_frame_rate(settings().frame_rate);
+        settings_window_set_frame_rate(settings().frame_rate);
     }
 
     void apply_presentation() {
@@ -1085,9 +1178,16 @@ private:
 
     Uint64 next_frame_ns_ = 0;
     bool swallow_next_text_ = false;  // the press that produced this text was a control
-    Gamepads gamepads_;               // opened at start-up, closed with the platform
-    float gain_ = 1.0f;               // the device's volume, as SDL takes it
-    Voice voices_[VOICE_LIMIT];       // opened as they are first needed, then kept
+    struct HeldWheelKey {
+        InputCode code;
+        int direction;  // -1 anticlockwise, 1 clockwise
+    };
+    std::vector<HeldWheelKey> held_wheel_;  // the wheel keys down now, oldest first
+    unsigned wheel_hold_frames_ = 0;        // since the newest of them went down
+    float wheel_hold_carry_ = 0.0f;         // the fraction of a detent not yet turned
+    Gamepads gamepads_;                     // opened at start-up, closed with the platform
+    float gain_ = 1.0f;                     // the device's volume, as SDL takes it
+    Voice voices_[VOICE_LIMIT];             // opened as they are first needed, then kept
     MusicPlayer music_;
 };
 

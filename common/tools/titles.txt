@@ -1,0 +1,13 @@
+# The titles, and what a release needs to know about each. One line per title:
+#
+#   directory | executable | display name | game folder | data directory (macOS) | platforms
+#
+# `game folder` is the folder on the iPod that holds the game's own files — the thing a player
+# has to supply, since no artifact may contain it. `platforms` is what can be built: `switch`
+# appears only where src/platform/switch/ exists.
+Mini Golf|minigolf|Mini Golf|88888|iPod Mini Golf|macos windows switch
+Cubis2|cubis|Cubis 2|99999|iPod Cubis 2|macos windows
+HoldEm|holdem|Texas Hold'em|33333|iPod Texas Hold'em|macos windows
+Lost|lost|Lost|1B200|iPod Lost|macos windows
+Sims Bowling|bowling|The Sims Bowling|1500C|iPod The Sims Bowling|macos windows
+Vortex|vortex|Vortex|12345|iPod Vortex|macos windows

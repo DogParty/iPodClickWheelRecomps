@@ -25,7 +25,7 @@ contributing.
 ```
 PLAN.md                  the plan of record: what Lost is, what it inherits, the schedule
 README.md                this file
-CMakeLists.txt           build; targets `lost` (SDL3) and `lost-headless` (tests)
+CMakeLists.txt           build; targets `lost` (SDL3) and `lost-headless` (no window)
 tools/
   survey.py              what is in the image: header, frameworks, what a walk reaches
   funcs.py               build gen/funcs.json, the seed the emitter's own walk starts from
@@ -34,7 +34,6 @@ tools/
   progress.py            how much of the game is still recompiled rather than decompiled
   manifest.py            write src/gamedata/manifest_data.cpp from a copy of the game's folder
   port-from-minigolf.py  the only way a file enters this tree from the Mini Golf recomp
-  oracle-emulator/       a pinned copy of the emulator; recordings are made with this one
 gen/                     GENERATED, never hand-edited
 src/
   runtime/               guest CPU state and memory, the eApp image, the frame pump, and the
@@ -49,17 +48,9 @@ src/
                          the deliberate changes to what the game does
   platform/              the portable half (paths, settings, save store, key bindings, .wav),
                          then one directory per platform: sdl3/ (desktop), null/ (headless)
-tests/
-  scripts/*.script       scripted input, the same format the emulator's `play` uses
-  expected/*.calls       framework-call logs recorded from the emulator — the oracle
-  record.sh              make a recording: the pinned emulator, and the flags a case is defined by
-  diff.sh                run a case through the recomp and compare its calls with the recording
-  frames.sh / frames.py  the picture oracle: the same script through both, compared frame by frame
-  game-dir.sh            a private, freshly copied game folder per run
-  unit/                  stand-alone unit tests
 analysis/                the reverse-engineering evidence for this title (see its README)
-reference/               MANIFEST.md, what was pinned from the emulator and when; PORTED.md, the
-                         provenance of every file copied from the Mini Golf project
+reference/               MANIFEST.md and PORTED.md, the provenance of every file copied from
+                         the Mini Golf project
 ```
 
 ## The game's files
@@ -90,10 +81,8 @@ very often the only copy they have. The copy goes to the per-user data directory
 saves and settings written beside them are ignored, since they are not part of what shipped — and
 if any has gone missing or changed, the browser comes back.
 
-`--install=PATH` installs from a folder or a zip without the dialog, which is what a headless run
-needs, and `--gamedir=DIR` bypasses all of this and runs straight from a directory, as the tests
-do: each of them is handed its own copy, so a run's saved games cannot change what the next one
-does and the folder you point `GAME_DIR` at is never written to.
+`--install=PATH` installs from a folder or a zip without the dialog, and `--gamedir=DIR` bypasses
+all of this and runs straight from a directory, which is never written to.
 
 ## Saving
 
@@ -117,9 +106,6 @@ rules follow, and the file layer keeps each of them:
 * A save that is not there yet still opens, empty. The game expects to be able to open one before
   it has ever written one, and decides there is none from the magic words it does not find.
 
-`tests/unit/save_files_test.cpp` holds a case for each, and `tests/save-and-exit.sh` plays the
-whole route: save, exit, relaunch, and the save still there.
-
 ## Leaving the game
 
 The game asks to be put away rather than being taken away. It answers in the byte at `ctx+0x100`,
@@ -133,9 +119,7 @@ it back:
   is left alone. A window on a desktop has no such policy, so this one request is declined and the
   game carries on; it asks again every frame until the next input refreshes its activity clock.
 
-Leaving the request unanswered is what made Save and Exit sit on its SAVING screen for ever. The
-pinned emulator still does, so this route is checked by `tests/save-and-exit.sh` against the game
-itself rather than against the emulator.
+Leaving the request unanswered is what made Save and Exit sit on its SAVING screen for ever.
 
 `LOST_TRACE_FILES=1` prints one line per file operation — open, transfer, close, with the name,
 the byte count and the result. It is the quickest way to see what a screen is waiting for.
@@ -145,6 +129,78 @@ name-and-bytes interface, and a platform with somewhere of its own (a console's 
 app's private storage) returns a store for it from `Platform::create_save_store`. Returning
 nothing accepts the default: one file per save in the game's own folder, as the iPod did.
 
+## Windows
+
+There is a 64-bit Windows build — `lost.exe`, the same SDL3 program as the macOS one.
+
+    tools/windows-build.sh
+
+The toolchain is MinGW-w64. It is not installed on this machine and does not need to be: the
+script — a wrapper around `../common/tools/windows-build.sh`, which every title shares — builds
+an Ubuntu image with the cross-compiler, its zlib and SDL3's own mingw development package, and
+runs the whole build in it against this working tree, so Docker is the only requirement. The
+toolchain file beside it, `mingw-w64.cmake`, serves as well on any machine with the
+`x86_64-w64-mingw32` toolchain on its path; on Windows itself `CMakeLists.txt` also spells every
+option the MSVC way, so `cmake -B build` there is the other route. The result is
+`build-windows/dist/`: `lost.exe` beside the `SDL3.dll` it loads. Nothing else is needed — the
+C++ runtime is linked in.
+
+To run it, copy that folder to a Windows machine and start the .exe. On first launch it asks for
+the game's files with the native file browser, as on macOS, and keeps them in
+`%APPDATA%\iPod Lost` beside the saves and settings. There is no console
+window: the game is one window and nothing else. Started from a terminal it joins that terminal
+and prints there as it always did, and anything fatal with no terminal to print to is a message
+box, so a program that cannot start still says why
+(`common/src/ipod/platform/windows_console.h`). The headless build is deliberately still
+a console program, since its output is the whole point of it.
+
+**Settings.** Ctrl+, opens the settings window — the same tabs as the Mac's, as a Win32 window of
+the game's own (`src/platform/sdl3/win32_settings.cpp`), owned by the game's window so it stays
+in front of it. Tab moves between the controls and Escape closes it. The two windows share
+everything but the widgets: the actions, the keys on offer, the saved files and the hooks into
+the host are the portable code behind both, so a change in one is a change in the other. Its
+controls take the modern look from the manifest in `src/platform/sdl3/win32_settings.manifest`,
+which the build embeds.
+
+**Music** plays, through Media Foundation: the tracks are AAC, which SDL does not decode, and
+the decoder behind `src/platform/sdl3/music_decoder.h` is AudioToolbox on macOS and a Media
+Foundation source reader on Windows — each the system's own, so there is nothing to ship. A
+Windows "N" edition without the Media Feature Pack has no AAC decoder; the program says so once
+on the console and plays on without music.
+
+## Licence
+
+GPL-3.0-or-later, like the rest of the ports; the tools in `../common/tools/` are MIT. See
+`../LICENSING.md` for the split and for what a licence here does not cover — the game itself is
+not ours to license, and no part of it is in this repository or in any release.
+
+## Releases
+
+**The game's folder is `1B200`.** That is the folder from the iPod that a player has to
+supply; no artifact contains it, and nothing runs without it. Each built artifact carries a
+readme that says so, names that folder, and gives the place it ends up
+(`%APPDATA%\iPod Lost\1B200` on Windows, `~/Library/Application Support/iPod Lost/1B200`
+on macOS).
+
+    ../common/tools/release.sh <version> Lost
+
+builds every artifact this machine can and lays them out under `release/<version>/` with a
+`SHA256SUMS` beside them:
+
+    lost-<version>-macos.zip         "Lost.app", universal, macOS 11 and later
+    lost-<version>-windows-x64.zip   the .exe and SDL3.dll
+
+The same script is what continuous integration runs (`.github/workflows/release.yml`), so a tag
+and a laptop build the same thing. Run it with no title named and it does every title in the
+tree. It signs nothing: an unsigned .app is quarantined by macOS the first time it is opened
+from a download, and each artifact's readme says how to open it anyway (right-click ▸ Open, or
+`xattr -dr com.apple.quarantine`). Signing needs a paid Apple developer account and is a
+decision for whoever publishes.
+
+The macOS artifact is built against SDL's own release framework rather than this machine's SDL,
+which is what makes it universal and lets it run on macOS 11: a Homebrew SDL is built for the
+machine it was installed on and would pin the app to that architecture and that macOS version.
+
 ## Building
 
 Requirements: CMake ≥ 3.21, a C++17 compiler, Python 3.10+, SDL3 (via `pkg-config`), zlib.
@@ -152,8 +208,29 @@ Requirements: CMake ≥ 3.21, a C++17 compiler, Python 3.10+, SDL3 (via `pkg-con
 ```sh
 cmake -B build && cmake --build build
 ./build/lost                                  # asks for the game's folder the first time
-./build/lost --install="…/Games_RO/1B200"     # or install it without the dialog
+./build/lost --install="PATH/1B200"           # or install it without the dialog
 ```
+
+The windowed build is a bundle on macOS, so it lands at `build/lost.app/Contents/MacOS/lost`
+rather than `build/lost`; the headless build is a plain executable as before.
+
+**The first command is not optional, and it needs your copy of the game.** `gen/` holds the
+machine-translated half of this port: the functions that have not been decompiled by hand yet,
+written out as C++ by the shared recompiler (`../common/tools/recomp`). It is not in the
+repository and never will be, because it is a translation of the game's own binary rather than
+anything written here. `tools/funcs.py` reads that binary and seeds the function table;
+`tools/emit.py` walks it and writes `gen/src`. Both default to a copy of the game sitting beside
+this tree, so point them at yours:
+
+```sh
+python3 tools/funcs.py --image "PATH/1B200/Executables/Lost_1_1_2917525.bin"
+python3 tools/emit.py
+```
+
+The `.bin` they want is inside the game's own `1B200` folder, under `Executables/`, which is
+the same folder the built game asks you for on its first run. Skip this step and CMake still
+configures, the compile still succeeds, and the link fails with a wall of undefined symbols.
+
 
 The default build is **Release**: `-O3 -g`, with its symbols and its assertions kept. That matters
 more here than in most projects, because the renderer is a software rasteriser and the optimiser's
@@ -162,7 +239,7 @@ line of the rasteriser was changed. `assert` is deliberately left live; it was m
 nothing.
 
 `-DCMAKE_BUILD_TYPE=RelWithDebInfo` is the debugging configuration and is `-O1 -g`, which is what
-makes a recompiled function steppable next to the emulator without being unusably slow.
+makes a recompiled function steppable without being unusably slow.
 
 ## Sound
 
@@ -250,10 +327,6 @@ picture was enlarged.
 It does nothing at 1×, and cannot: one texel is one pixel and there is no edge to resolve. The
 settings window greys it out there rather than letting it be turned on to no effect.
 
-Both are refused outright while `--emulator-graphics` is on, because the picture oracle compares
-whole 320×240 frames and has nothing to compare a larger one with. `tests/unit/render_scale_test`
-pins that the flag takes them away rather than merely being ignored by them.
-
 **What it costs.** Every step costs its square in fragments, but the rasteriser is drawn on every
 core and no longer at `-O1`, so the square is smaller than it sounds. Measured over the same
 2 400-frame run — 4.9 million fragments a frame at 4× — on an M1 Max, ten cores:
@@ -280,15 +353,13 @@ thread is free — several stripes per thread, claimed with one atomic increment
 machine has eight fast cores and two slow ones and an even share would leave the fast eight
 waiting. A pixel belongs to exactly one stripe, so the draws that touch it still arrive in the
 order the game issued them, through the same arithmetic: **every frame is bit-for-bit the frame
-one thread would have drawn**, which is why this is on by default and why the picture oracle never
-had to be told about it. `--render-threads=N` pins it, and `--render-threads=1` starts no threads
-at all.
+one thread would have drawn**, which is why this is on by default. `--render-threads=N` pins it,
+and `--render-threads=1` starts no threads at all.
 
 ## Cheats
 
 **Settings ▸ Cheats**, on a tab of its own because these change what the *game* does rather than
-how this program shows it. Everything here is off by default, off in every test, and off in a
-fresh settings file.
+how this program shows it. Everything here is off by default, and off in a fresh settings file.
 
 **Unlock all chapters** makes Play ▸ Select Chapter offer all nine — The Arrival through The
 Escape — instead of only the ones you have reached, and the game loads whichever you pick.
@@ -309,10 +380,6 @@ Nothing about your progress is touched and nothing is written: no save is modifi
 the switch off puts the menu back on the next frame. That is deliberate — a cheat that rewrote a
 save would still be in the save after it was turned off — and it is also the only thing that
 *works*, since the game checksums its saves in a way this program cannot yet reproduce.
-
-`tests/cheats.sh` runs `tests/scripts/chapter-select.script` twice, with the cheat and without,
-and reads those eleven words back out of guest memory. Both readings are checked: a cheat that
-did nothing would pass a test that only looked at the unlocked run.
 
 ## Controls
 
@@ -378,8 +445,8 @@ Three things about this game's input are its own rather than the platform's, and
 firmware's event list; it has no press-time words, so a held Menu cannot be told from a tap; and
 the four sides of the wheel are not where compass order would put them — the position byte starts
 at three o'clock and runs counter-clockwise, so they are right 0, top 64, left 128, bottom 192.
-That last one is measured against the game's own movement, and `tests/scripts/walk.script` is what
-keeps it honest: it does what the tutorial asks and the game answers **EXCELLENT!**
+That last one is measured against the game's own movement: do what the tutorial asks and the
+game answers **EXCELLENT!**
 
 ## Frame rate and tearing
 
@@ -405,56 +472,13 @@ A rate below the display's still shows each frame for several refreshes, which i
 than tearing and cannot be helped at that rate: 60 is smoother than 30 for the same reason it is
 on any machine.
 
-## Testing
-
-```sh
-ctest --test-dir build          # unit tests, both call-log tiers, and the picture oracle
-tests/diff.sh boot              # one recorded case, verbose
-tests/diff.sh boot --exact      # the same case compared word for word
-tests/frames.sh jungle          # the same case compared as pictures
-tests/cheats.sh                 # the chapter menu, with the cheat and without
-```
-
-An oracle case is a script of input events plus the log of framework calls the emulator made
-while running it; the recompilation passes when it makes the identical sequence of calls with
-identical arguments. `tests/diff.sh` compares each call's ordinal and its real arguments (arity
-from `src/libeapp/imports.json`); `--exact` compares every logged register and every stack word
-behind it, leftovers included, which only register-for-register code can reproduce — which is
-what this build still is, since nothing in `src/game/` is decompiled code yet.
-
-**The call log cannot see what a draw drew.** A draw hands the framework an address and a count;
-what lives at that address is never an argument, so a texture decoded through the wrong palette
-or a quad in the wrong place changes not one word of the log. `tests/frames.sh <case>` is the
-answer: it runs the same script through the recomp and the pinned emulator and compares the
-pictures, with a threshold rather than a hash — the two rasterisers round differently on about
-0.3% of a frame, and a real fault is nothing like that small. Both rendering faults found on day
-one were found this way and could not have been found any other.
-
-To add a case: write `tests/scripts/<name>.script`, run `tests/record.sh <name>`, and CMake picks
-it up — a call-log test on both tiers, plus a picture test if the script takes a `shot`. A case
-must end in `quit`, and sooner rather than later: an unbounded boot is 2.9 million calls and
-300 MB of log.
-
-Recordings are made from the **pinned** copy of the emulator under `tools/oracle-emulator/`,
-never the live tree — the live tree changes under other people's work and stops reproducing its
-own recordings, which is a lesson the Mini Golf project paid for. Build it once with:
-
-```sh
-cargo build --release --manifest-path tools/oracle-emulator/Cargo.toml \
-    --target-dir build/oracle-emulator
-```
-
 ## Status
 
 **Day two.** The game runs natively in a window and is played from the keyboard; every one of its
-789 functions is still the recompilation, and none is hand-decompiled yet. Both oracle cases —
-`boot` (84 810 framework calls) and `name-entry` (115 630) — are identical to the emulator's
-recordings under the *exact* comparison; the picture oracle agrees with the emulator frame by
-frame through the menus and into the jungle; and `ctest` is 17 for 17.
+789 functions is still the recompilation, and none is hand-decompiled yet.
 
 Three things this port does that the iPod did not, all off by default: the render scale, dialogue
 text at the raster's resolution, and unlocking every chapter. See the two sections above.
 
-`PLAN.md` carries the schedule, what each of the seven differences from the Mini Golf recomp cost
-to pay for, and — at the end of its progress log — the three things that are **not** established.
-Nothing in this README claims a behaviour that has not been run.
+`PLAN.md` carries the schedule and what each of the seven differences from the Mini Golf recomp
+cost to pay for. Nothing in this README claims a behaviour that has not been run.

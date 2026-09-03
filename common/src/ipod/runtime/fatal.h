@@ -10,7 +10,16 @@ namespace ipod {
 
 // Print a message (printf-style), then exit. Used for every condition that means the recomp
 // itself is wrong or the game is somewhere it cannot be.
-[[noreturn]] void fatal(const char* format, ...) __attribute__((format(printf, 1, 2)));
+//
+// The format is C99's — %zu and the rest — everywhere. MinGW reads a plain `printf` attribute as
+// Microsoft's old C runtime's dialect, which has no %zu, and its checks fail the build on it.
+#if defined(__MINGW32__)
+#define IPOD_PRINTF_FORMAT gnu_printf
+#else
+#define IPOD_PRINTF_FORMAT printf
+#endif
+[[noreturn]] void fatal(const char* format, ...)
+    __attribute__((format(IPOD_PRINTF_FORMAT, 1, 2)));
 
 // A platform may ask to be told before the program dies. On a desktop the message goes to the
 // terminal and that is the end of it; a console has no terminal behind it, so the platform needs

@@ -4,7 +4,7 @@ One-shot rewriters for the mechanical half of turning decompiled code into idiom
 are here because the job is not finished: several of the game's record types still take their
 address rather than a reference (see PLAN.md), and these are how the rest will be converted.
 
-Run them from the project root, always in this order, and **build and run the oracle after every
+Run them from the project root, always in this order, and **build and check the game after every
 step** — they rewrite code, and a rewriter that is subtly wrong produces code that still
 compiles.
 
@@ -14,7 +14,7 @@ python3 tools/refactor/refs.py as_image ImageRecord --apply    # parameters -> r
 python3 tools/refactor/locals.py as_image ImageRecord --apply  # the same for locals
 python3 tools/refactor/nullchecks.py ImageRecord               # drop the impossible null checks
 python3 tools/refactor/needstate.py                            # add the include for the type
-cmake --build build && tests/diff.sh boot && tests/diff.sh menus
+cmake --build build
 ```
 
 `refs.py --skip name1,name2` leaves functions alone that genuinely want the address — a

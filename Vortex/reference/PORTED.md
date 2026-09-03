@@ -10,7 +10,7 @@ ported and then deliberately removed; the reason is in the script's `PORTED` lis
 
 `python3 tools/port-from-bowling.py --check` reports both.
 
-Source tree: `/Users/lucille/Documents/Projects/iPod-Reverse-Engineer/ipod-emulator/recomps/Sims Bowling`
+Source tree: `../Sims Bowling`
 
 | file | source SHA-256 | ported SHA-256 |
 |---|---|---|

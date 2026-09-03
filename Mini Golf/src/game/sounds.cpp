@@ -135,31 +135,29 @@ uint32_t sound_slots_release_all() {
 // anything else resets the ramp), then the device is told; with no change, the device's own
 // level is read back into the setting.
 //
-// The slot each direction reads looks crossed, and is not: event 0 takes its step from slot 1
-// and event 1 from slot 0, which is what the original does (0x18013ffc reads the slot table's
-// +4 and 0x1801401c its +0xc; `WheelSlot` is flags, count, step, so those are slots 0 and 1 —
-// and the branches are the other way round from the selection). `brightness_adjust` below is
-// the same function for the screen and reads them the same way (0x18014c24, 0x18014c44).
+// Each direction reads its own slot's step: event 0 — slot 0 pressed — takes slot 0's
+// (0x18014074 loads the slot table's +4; `WheelSlot` is flags, count, step, so +4 is slot 0's
+// step) and lowers the level; event 1 takes slot 1's (0x1801401c loads +0xc) and raises it.
+// `brightness_adjust` below is the same function for the screen and reads them the same way.
 //
-// KNOWN BUG, not here: in this port neither slider actually moves, because the slot the wheel
-// fills is the other one from the slot the original fills. The pure recompilation, running the
-// original instructions, walks the level from 0 to 40 over forty frames on the same scripted
-// input where this walks it nowhere. The difference is upstream in `input_gather`
-// (input.cpp, 0x180082c4), which decides *which* slot a direction goes to, and correcting it
-// changes what every screen reads from the wheel — so it wants a change of its own, with the
-// second oracle to measure it. Swapping the slots here instead was tried and is wrong: it moves
-// the level, but by a different ramp than the original, and `recomp_pages` says so.
+// For a long time this read them crossed — event 0 from slot 1, event 1 from slot 0 — with a
+// note that the crossing was the original's and that the sliders' failure to move lay upstream
+// in `input_gather`. Neither was so: `input_gather` (0x180082c4) and the slot setter
+// (0x1800dcec) match the original instruction for instruction, and the branch that reads +4 is
+// the one taken for event 0. The other slot's step is always zero, which is why neither slider
+// moved. tests/scripts/volume.script turns the wheel on the page and is compared against the
+// pure recompilation, which is what settled it.
 void music_level_adjust() {
     uint32_t& level =
         guest<uint32_t>(PLAY + static_cast<uint32_t>(offsetof(PlayState, music_level)));
     const int32_t before = static_cast<int32_t>(level);
     const uint32_t event = static_cast<uint32_t>(text_block().selection);
     if (event == 0) {
-        const int32_t step = wheel_step(wheel_slot_at(1).step, options_scratch().wheel_step_last);
+        const int32_t step = wheel_step(wheel_slot_at(0).step, options_scratch().wheel_step_last);
         level = static_cast<uint32_t>(before - step < 0 ? 0 : before - step);
         options_scratch().wheel_step_last = static_cast<uint32_t>(step);
     } else if (event == 1) {
-        const int32_t step = wheel_step(wheel_slot_at(0).step, options_scratch().wheel_step_last);
+        const int32_t step = wheel_step(wheel_slot_at(1).step, options_scratch().wheel_step_last);
         level = static_cast<uint32_t>(before + step > static_cast<int32_t>(LEVEL_MAX)
                                           ? static_cast<int32_t>(LEVEL_MAX)
                                           : before + step);
@@ -187,12 +185,12 @@ uint32_t brightness_adjust() {
     const uint32_t event = static_cast<uint32_t>(text_block().selection);
     if (event == 0) {
         const int32_t step =
-            wheel_step(wheel_slot_at(1).step, options_scratch().brightness_step_last);
+            wheel_step(wheel_slot_at(0).step, options_scratch().brightness_step_last);
         level = static_cast<uint32_t>(before - step < 0 ? 0 : before - step);
         options_scratch().brightness_step_last = static_cast<uint32_t>(step);
     } else if (event == 1) {
         const int32_t step =
-            wheel_step(wheel_slot_at(0).step, options_scratch().brightness_step_last);
+            wheel_step(wheel_slot_at(1).step, options_scratch().brightness_step_last);
         level = static_cast<uint32_t>(before + step > static_cast<int32_t>(LEVEL_MAX)
                                           ? static_cast<int32_t>(LEVEL_MAX)
                                           : before + step);

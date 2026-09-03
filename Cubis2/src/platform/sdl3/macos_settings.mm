@@ -1,16 +1,16 @@
-// Cocoa side of macos_settings.h.
+// Cocoa side of settings_window.h.
 //
-// Four tabs. General holds the frame rate and the title-bar readout; Input is a column of rows,
+// Three tabs. General holds the frame rate and the title-bar readout; Input is a column of rows,
 // one per action, each with a pop-up menu of the keys this platform is willing to assign
 // (platform::assignable_inputs); Graphics chooses how many pixels are drawn and how they are
-// enlarged; Cheats holds the switches that change what the game itself does.
+// enlarged.
 //
 // Choosing a key from a list rather than asking the player to press one is deliberate: a "press
 // any key" prompt has to intercept the keyboard, and on macOS that means either the responder
 // chain — which does not deliver keys to a button unless Full Keyboard Access is on — or an event
 // monitor that has to be right about every case. A pop-up needs none of that and cannot fail
 // quietly.
-#include "platform/sdl3/macos_settings.h"
+#include "platform/sdl3/settings_window.h"
 
 #include "platform/input_bindings.h"
 #include "platform/settings.h"
@@ -50,7 +50,6 @@ using cubis::platform::SettingsHooks;
 
 @interface MinigolfSettingsWindow : NSWindowController
 @property(nonatomic, assign) SettingsHooks hooks;
-- (NSView*)makeCheatsPane:(NSSize)pane;
 - (void)refresh;
 - (void)keyChosen:(MinigolfKeyMenu*)sender;
 - (void)restoreDefaults:(id)sender;
@@ -59,7 +58,6 @@ using cubis::platform::SettingsHooks;
 - (void)pixelPerfectChosen:(id)sender;
 - (void)renderScaleChosen:(id)sender;
 - (void)highResolutionTextChosen:(id)sender;
-- (void)unlockAllChaptersChosen:(id)sender;
 - (void)showFrameRateChosen:(id)sender;
 - (void)showFrameRate:(unsigned)rate;
 @end
@@ -78,7 +76,6 @@ static NSPopUpButton* scaling_menu = nil;
 static NSButton* pixel_perfect_switch = nil;
 static NSPopUpButton* render_scale_menu = nil;
 static NSButton* hi_res_text_switch = nil;
-static NSButton* unlock_chapters_switch = nil;
 
 // The plain, unbordered labels this window is mostly made of.
 static NSTextField* make_label(NSRect frame, NSString* text, bool secondary) {
@@ -159,7 +156,6 @@ CGFloat input_pane_height() {
     [self addTab:tabs titled:@"General" view:[self makeGeneralPane:pane]];
     [self addTab:tabs titled:@"Input" view:[self makeInputPane:pane]];
     [self addTab:tabs titled:@"Graphics" view:[self makeGraphicsPane:pane]];
-    [self addTab:tabs titled:@"Cheats" view:[self makeCheatsPane:pane]];
 
     [self refresh];
     return self;
@@ -330,46 +326,16 @@ CGFloat input_pane_height() {
     return view;
 }
 
-// Cheats are on a tab of their own, and there is nothing else on it. Each one changes what the
-// game does rather than how this program shows it, which is a different kind of decision, and
-// among the display settings someone could turn one on while looking for something else.
-- (NSView*)makeCheatsPane:(NSSize)pane {
-    NSView* view = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, pane.width, pane.height)];
-    const CGFloat y = pane.height - GRAPHICS_TOP_INSET;
-
-    [view addSubview:make_label(NSMakeRect(16, y, pane.width - 32, 18),
-                                @"These change the game itself. None of them is written into your "
-                                @"saved game.",
-                                true)];
-
-    unlock_chapters_switch =
-        [[NSButton alloc] initWithFrame:NSMakeRect(16, y - 34, pane.width - 32, 20)];
-    [unlock_chapters_switch setButtonType:NSButtonTypeSwitch];
-    [unlock_chapters_switch setTitle:@"Unlock all chapters"];
-    [unlock_chapters_switch setTarget:self];
-    [unlock_chapters_switch setAction:@selector(unlockAllChaptersChosen:)];
-    [view addSubview:unlock_chapters_switch];
-
-    [view addSubview:make_label(NSMakeRect(16, y - 112, pane.width - 32, 62),
-                                @"Play ▸ Select Chapter normally offers only the chapters you "
-                                @"have reached. With this on it offers all nine, from The Arrival "
-                                @"to The Escape, and starts whichever you pick. Your progress is "
-                                @"not touched and nothing is written: turn it off and the list is "
-                                @"back to what you have earned.",
-                                true)];
-    return view;
-}
-
 // Show what each action is bound to now, and what every setting now *is*.
 //
 // The values come from `settings()` rather than from the hooks, and that is a fix rather than a
-// preference. `macos_settings_install` is called from the platform's constructor, which runs
+// preference. `settings_window_install` is called from the platform's constructor, which runs
 // before the saved settings have been read — `create_platform` is the first thing the frame pump
 // does and `load_settings` is sixty lines later — so the copy in the hooks is a snapshot of the
 // *defaults*, taken before the player's file was opened. The window showed those defaults every
 // time it was opened, whatever the game was actually doing. The frame rate escaped it only
 // because `apply_settings` pushes that one value back through
-// `macos_settings_set_frame_rate` afterwards; nothing else had such a path.
+// `settings_window_set_frame_rate` afterwards; nothing else had such a path.
 //
 // A binding this platform does not offer in its list still shows, as an extra item, so opening
 // the window cannot silently discard it.
@@ -385,7 +351,6 @@ CGFloat input_pane_height() {
         live.pixel_perfect = now.pixel_perfect;
         live.render_scale = now.render_scale;
         live.high_resolution_text = now.high_resolution_text;
-        live.unlock_all_chapters = now.unlock_all_chapters;
         self.hooks = live;
     }
     unsigned choice_count = 0;
@@ -418,8 +383,6 @@ CGFloat input_pane_height() {
     // one texel is one pixel, and a switch that can be turned on to no effect is a switch that
     // says this feature does not work.
     [hi_res_text_switch setEnabled:self.hooks.render_scale > MIN_RENDER_SCALE];
-    [unlock_chapters_switch
-        setState:self.hooks.unlock_all_chapters ? NSControlStateValueOn : NSControlStateValueOff];
 }
 
 - (void)showFrameRate:(unsigned)rate {
@@ -456,7 +419,7 @@ CGFloat input_pane_height() {
         return;
     }
     // The host owns the setting: ask it to change, and it reports back through
-    // macos_settings_set_frame_rate, which is also what the L key goes through.
+    // settings_window_set_frame_rate, which is also what the L key goes through.
     if (self.hooks.on_frame_rate_chosen != nullptr) {
         self.hooks.on_frame_rate_chosen(self.hooks.context, rate_choices[selected]);
     } else {
@@ -529,17 +492,6 @@ CGFloat input_pane_height() {
     }
 }
 
-- (void)unlockAllChaptersChosen:(id)sender {
-    (void)sender;
-    const bool unlock = [unlock_chapters_switch state] == NSControlStateValueOn;
-    SettingsHooks hooks = self.hooks;
-    hooks.unlock_all_chapters = unlock;
-    self.hooks = hooks;
-    if (hooks.on_unlock_all_chapters_changed != nullptr) {
-        hooks.on_unlock_all_chapters_changed(hooks.context, unlock);
-    }
-}
-
 - (void)keyChosen:(MinigolfKeyMenu*)sender {
     const unsigned row = sender.actionIndex;
     const unsigned slot = sender.slot;
@@ -582,7 +534,7 @@ CGFloat input_pane_height() {
 @implementation MinigolfSettingsMenuTarget
 - (void)openSettings:(id)sender {
     (void)sender;
-    cubis::platform::macos_settings_open();
+    cubis::platform::settings_window_open();
 }
 @end
 
@@ -593,7 +545,7 @@ MinigolfSettingsMenuTarget* menu_target = nil;
 SettingsHooks installed_hooks;
 }  // namespace
 
-void macos_settings_install(const SettingsHooks& hooks) {
+void settings_window_install(const SettingsHooks& hooks) {
     @autoreleasepool {
         installed_hooks = hooks;
 
@@ -619,7 +571,7 @@ void macos_settings_install(const SettingsHooks& hooks) {
     }
 }
 
-void macos_settings_open() {
+void settings_window_open() {
     @autoreleasepool {
         if (settings_window == nil) {
             settings_window = [[MinigolfSettingsWindow alloc] init];
@@ -632,7 +584,7 @@ void macos_settings_open() {
     }
 }
 
-void macos_settings_set_frame_rate(unsigned frames_per_second) {
+void settings_window_set_frame_rate(unsigned frames_per_second) {
     installed_hooks.frame_rate = frames_per_second;
     if (settings_window != nil) {
         [settings_window showFrameRate:frames_per_second];

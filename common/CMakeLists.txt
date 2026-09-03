@@ -15,6 +15,7 @@ add_library(ipod_core STATIC
     src/ipod/platform/device.cpp
     src/ipod/platform/save_store.cpp
     src/ipod/platform/text_entry.cpp
+    src/ipod/platform/windows_console.cpp
     src/ipod/runtime/fatal.cpp
     src/ipod/runtime/runtime.cpp
     src/ipod/libeapp/gles.cpp
@@ -36,4 +37,7 @@ target_link_libraries(ipod_core PUBLIC ZLIB::ZLIB)
 # a framework; every other platform's answer is a system call or a file.
 if(APPLE)
     target_link_libraries(ipod_core PUBLIC "-framework IOKit" "-framework CoreFoundation")
+elseif(WIN32)
+    # The message box a windowed build dies with (platform/windows_console.cpp).
+    target_link_libraries(ipod_core PUBLIC user32)
 endif()

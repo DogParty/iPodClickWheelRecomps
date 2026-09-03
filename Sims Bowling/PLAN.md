@@ -10,7 +10,7 @@ rewritten by hand in a day.
 Everything lives in this folder. The emulator tree is read, snapshotted, and otherwise left alone.
 
 This is the **fourth** title to go through this process, and the second to start with
-`recomps/common/` in place. *Mini Golf* is finished — every one of its 333 functions is
+`common/` in place. *Mini Golf* is finished — every one of its 333 functions is
 hand-decompiled. *Lost* and *Texas Hold'em* run as pure recompilations with their oracles green,
 their decompilations barely begun. `../Mini Golf/PLAN.md`, `../Lost/PLAN.md` and
 `../HoldEm/PLAN.md` are the record of how the first three were done, and `../common/README.md` is
@@ -32,7 +32,7 @@ emulator at commit `96bfe90`.
 | | |
 |---|---|
 | image | `SimsBowling_1_1_3002478.bin`, 475 536 bytes, loads flat at `0x18000000`, ends `0x18074190`. Header version `0x10001000`; `eapp-inspect` warns, as it did for Hold'em, that its block-count word says 5 while seven framework blocks are present |
-| game data | `20 iPod games/Games_RO/1500C/` — 63 shipped files, ~53 MB. One 19 997 809-byte resource library `gameLib.rlb`, 31 `.wav` sound effects and 9 `.m4a` music tracks at the root, `rserver.bin` (105 020 bytes, byte-identical to Lost's), `SimsBowling_Launch.raw.lcd5`, and `Resources/<lang>/` — a `Description.xml` and a guide `.jpg` for each of seven languages. Plus one file the game *wrote*: `savefile.dat` (below) |
+| game data | `Games_RO/1500C/` — 63 shipped files, ~53 MB. One 19 997 809-byte resource library `gameLib.rlb`, 31 `.wav` sound effects and 9 `.m4a` music tracks at the root, `rserver.bin` (105 020 bytes, byte-identical to Lost's), `SimsBowling_Launch.raw.lcd5`, and `Resources/<lang>/` — a `Description.xml` and a guide `.jpg` for each of seven languages. Plus one file the game *wrote*: `savefile.dat` (below) |
 | entry vectors | 3: `0x18045588` start-up, `0x18045504` terminate (header slot 1), `0x180455e4` per-frame |
 | functions | **501** reachable by walking from the vectors — a fifth of the program; **2 168** seed entries once the two probes' live edges and the image's stored function pointers are added (**768** of those, the most of any title by far); **2 402** once the emitter walks to a fixpoint |
 | instructions | **71 924** ARM instructions — the most of the four titles; **1 unwalkable** before the recompiler learned its idiom (difference 8), none after |
@@ -125,7 +125,7 @@ this tree is a defect.
 ## Architecture
 
 ```
-recomps/Sims Bowling/
+Sims Bowling/
   PLAN.md                this document
   README.md              layout, building, testing, contributing a decompiled function
   CMakeLists.txt         adds ../common; targets bowling (SDL3) and bowling-headless (tests)

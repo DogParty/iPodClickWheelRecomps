@@ -68,7 +68,7 @@ Settings& settings() {
 std::string settings_to_text(const Settings& values) {
     std::ostringstream out;
     out << "# Vortex settings. fps 0 means as fast as the machine allows.\n";
-    out << "# render-scale 1 is the iPod's own 320x240; cheat-* change what the game does.\n";
+    out << "# render-scale 1 is the iPod's own 320x240.\n";
     out << "format " << SETTINGS_FORMAT << '\n';
     out << "fps " << values.frame_rate << '\n';
     out << "show-fps " << (values.show_frame_rate ? 1 : 0) << '\n';
@@ -80,7 +80,6 @@ std::string settings_to_text(const Settings& values) {
     out << "whole-multiples " << (values.pixel_perfect ? 1 : 0) << '\n';
     out << "render-scale " << values.render_scale << '\n';
     out << "hi-res-text " << (values.high_resolution_text ? 1 : 0) << '\n';
-    out << "cheat-unlock-chapters " << (values.unlock_all_chapters ? 1 : 0) << '\n';
     return out.str();
 }
 
@@ -111,8 +110,6 @@ void settings_from_text(Settings& values, const std::string& text) {
                            MIN_RENDER_SCALE, MAX_RENDER_SCALE);
         } else if (name == "hi-res-text") {
             values.high_resolution_text = value != "0";
-        } else if (name == "cheat-unlock-chapters") {
-            values.unlock_all_chapters = value != "0";
         } else if (name == "scaling") {
             for (const ScalingName& scaling : NAMES) {
                 if (value == scaling.key) {

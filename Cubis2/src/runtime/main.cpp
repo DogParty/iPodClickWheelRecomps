@@ -25,14 +25,15 @@
 #include "framework/storage.h"
 #include "gamedata/install.h"
 #include "gamedata/manifest.h"
+#include "ipod/platform/device.h"
 #include "ipod_eapp.h"
 #include "libeapp/heap.h"
 #include "platform/input_bindings.h"
-#include "ipod/platform/device.h"
 #include "platform/paths.h"
 #include "platform/platform.h"
 #include "platform/settings.h"
 #include "platform/text_entry.h"
+#include "platform/windows_console.h"
 #include "runtime/cpu.h"
 #include "runtime/eapp_image.h"
 #include "runtime/memory.h"
@@ -67,9 +68,10 @@ struct Options {
     std::string script_path;    // scripted input, FRAME: ACTION per line
     std::string call_log_path;  // where to write the framework-call log
     std::string fixed_time;
+    std::string program_name;  // argv[0], for a message that says how to run it again
     // --battery=N: report N% charge instead of the host's, so a gauge can be seen at a level
     // this machine is not at. Empty = the host's (ipod/platform/device.h).
-    std::string fixed_battery;     // HH:MM shown by the game's clock, for reproducible runs
+    std::string fixed_battery;  // HH:MM shown by the game's clock, for reproducible runs
     unsigned frame_limit = 0;   // stop after this many frames; 0 = run until quit
     unsigned trace_from = 0;    // --trace-from=N: the entry trace is silent before frame N
     // Behave as the emulator's own harness did — step the game's clock per call rather than per
@@ -124,11 +126,11 @@ void report_frame_dumps(unsigned frame) {
 
 Options parse_options(int argc, char** argv) {
     Options options;
+    options.program_name = argc > 0 ? argv[0] : "cubis";
     const std::pair<const char*, std::string*> text_flags[] = {
         {"--gamedir=", &options.game_dir},       {"--script=", &options.script_path},
         {"--call-log=", &options.call_log_path}, {"--install=", &options.install_from},
-        {"--time=", &options.fixed_time},
-        {"--battery=", &options.fixed_battery},
+        {"--time=", &options.fixed_time},        {"--battery=", &options.fixed_battery},
     };
     const std::pair<const char*, unsigned*> number_flags[] = {
         {"--frames=", &options.frame_limit},
@@ -559,8 +561,8 @@ private:
 };
 
 struct Action {
-    bool quit = false;        // stop now, as a recording's `quit` does
-    bool close = false;       // the window was closed: ask the game to save and shut down first
+    bool quit = false;   // stop now, as a recording's `quit` does
+    bool close = false;  // the window was closed: ask the game to save and shut down first
     bool screenshot = false;
 };
 
@@ -693,7 +695,10 @@ int run(Options options) {
     if (options.game_dir.empty()) {
         options.game_dir = gamedata::locate_game(*host, platform::data_directory());
         if (options.game_dir.empty()) {
-            std::fprintf(stderr, "no game files: nothing to run\n");
+            std::fprintf(stderr,
+                         "no game files: nothing to run. To install them without the file "
+                         "browser: %s --install-zip=PATH-TO-THE-GAME.zip\n",
+                         options.program_name.c_str());
             return EXIT_FAILURE;
         }
     }
@@ -909,5 +914,9 @@ int run(Options options) {
 }  // namespace cubis
 
 int main(int argc, char** argv) {
+    // On Windows this is a windowed program with no console of its own: it joins the terminal
+    // that started it, if there was one, and otherwise says anything fatal in a message box.
+    // Everywhere else, and in the headless build, it does nothing at all.
+    cubis::platform::windows_console_begin("Cubis 2");
     return cubis::run(cubis::parse_options(argc, argv));
 }

@@ -26,7 +26,7 @@ void check(bool condition, const char* what) {
 
 void test_defaults() {
     const Settings fresh;
-    check(fresh.frame_rate == 60, "the game's own timebase is the default rate");
+    check(fresh.frame_rate == 30, "half the game's own timebase is the default rate");
     check(fresh.show_frame_rate, "and the rate is shown until it is turned off");
     check(fresh.scaling == Scaling::Sharp, "sharp scaling is the default");
     check(!fresh.pixel_perfect, "filling the window is the default");
@@ -48,17 +48,17 @@ void test_text() {
 
     // A setting this build does not know, and one it does, in the same file.
     Settings partial;
-    settings_from_text(partial, "format 1\nfps 30\nsomething-else yes\n");
-    check(partial.frame_rate == 30, "a known setting loads past one that is not");
+    settings_from_text(partial, "format 1\nfps 60\nsomething-else yes\n");
+    check(partial.frame_rate == 60, "a known setting loads past one that is not");
     check(partial.scaling == Scaling::Sharp, "and one the file omits keeps its default");
 
     // A file written against another meaning of these settings is left alone entirely, rather
     // than restoring a default that has since moved.
     Settings other;
-    settings_from_text(other, "format 99\nfps 30\n");
-    check(other.frame_rate == 60, "a file of another format changes nothing");
-    settings_from_text(other, "fps 30\n");
-    check(other.frame_rate == 60, "and neither does one with no format at all");
+    settings_from_text(other, "format 99\nfps 60\n");
+    check(other.frame_rate == 30, "a file of another format changes nothing");
+    settings_from_text(other, "fps 60\n");
+    check(other.frame_rate == 30, "and neither does one with no format at all");
 }
 
 void test_persistence() {

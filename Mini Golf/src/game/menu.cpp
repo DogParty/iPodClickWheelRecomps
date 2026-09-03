@@ -415,6 +415,7 @@ namespace {
 
 constexpr uint32_t OPTIONS_ITEMS = 0x1801'9ce4, OPTIONS_ITEMS_SIZE = 0x90;
 constexpr uint32_t OPTIONS_ROWS = OPTIONS_ITEMS_SIZE / menu_item::SIZE;  // the image's six
+constexpr uint32_t OPTIONS_BRIGHTNESS_ROW = 3;  // Music, Sound FX, Clock/Batt, then Brightness
 constexpr uint32_t GAME_MODES_ITEMS = 0x1801'9c9c, GAME_MODES_ITEMS_SIZE = 0x48;
 constexpr uint32_t HELP_ITEMS = 0x1801'9d74, HELP_ITEMS_SIZE = 0x48;
 constexpr uint32_t HOLE_SELECT_ITEMS = 0x1801'9e7c, HOLE_SELECT_ITEMS_SIZE = 0x1b0;
@@ -444,14 +445,28 @@ void small_menu_enter(uint32_t items, uint32_t items_size, ScreenHandler handler
 // offer a row the pause menu's four-row window skips past — and because it belongs with Player
 // and Reset Game among the rows the pause menu already leaves out: things to set up a game
 // with, not things to change in the middle of one.
+//
+// Brightness is the iPod's backlight, and nothing this port runs on has one it could set: the
+// row is taken out of the table — the rows after it move up one, and the pause menu's window
+// is three rows rather than four — unless the oracles have asked for the original's menu, which
+// keeps it (its page still exists, in page.cpp, and reads the wheel as the volume's does).
 void options_enter() {
     game_state_block().loaded[155] = static_cast<int8_t>(1);
     const bool from_pause_menu = static_cast<uint32_t>(screen_state().byte_dcf) == 1;
     const bool with_cheats = !from_pause_menu && !port_additions_hidden();
-    const uint32_t rows = from_pause_menu ? 4 : OPTIONS_ROWS + (with_cheats ? 1 : 0);
+    const bool with_brightness = port_additions_hidden();
     menu_items_load(menu_table(), OPTIONS_ITEMS, OPTIONS_ITEMS_SIZE);
+    uint32_t image_rows = OPTIONS_ROWS;
+    if (!with_brightness) {
+        for (uint32_t i = OPTIONS_BRIGHTNESS_ROW; i + 1 < OPTIONS_ROWS; ++i) {
+            menu_table()[i] = menu_table()[i + 1];
+        }
+        --image_rows;
+    }
+    const uint32_t rows =
+        from_pause_menu ? (with_brightness ? 4u : 3u) : image_rows + (with_cheats ? 1 : 0);
     if (with_cheats) {
-        MenuItem& cheats = menu_table()[OPTIONS_ROWS];
+        MenuItem& cheats = menu_table()[image_rows];
         cheats.text_id = host_text_id(HostText::CheatsRow);
         cheats.kind = KIND_CHEATS;
         cheats.x = MENU_SLIDE_FROM;
@@ -573,8 +588,12 @@ uint32_t options_handle_event(uint32_t event) {
     if (event != EVENT_SELECT) {
         return 0;
     }
+    // By the item's kind rather than by its row: the two are the same in the image's table,
+    // which is why the original switches on the row, and differ here once the Brightness row
+    // has been taken out (options_enter) — every row below it would otherwise act as the one
+    // after it.
     const int32_t row = static_cast<int32_t>(static_cast<uint32_t>(menu_state().cursor));
-    switch (row) {
+    switch (static_cast<int32_t>(item(static_cast<uint32_t>(row)).kind)) {
     case 0: {  // Music: off, on, auto
         const bool off = option_cycle(options_state().music);
         if (off &&

@@ -83,7 +83,7 @@ void loading_render() {
     if (play_state().byte_7be == 1) {
         rect_fill(0, 0, to_fixed(SCREEN_WIDTH), to_fixed(SCREEN_HEIGHT), 0, 0, 0, FULL,
                   Blend::Opaque);
-        for (const auto [image, y, return_address] :
+        for (const auto& [image, y, return_address] :
              {std::tuple{LOADING_TITLE_IMAGE, LOADING_TITLE_Y, 0x18011e7cu},
               std::tuple{LOADING_PICTURE_IMAGE, LOADING_PICTURE_Y, 0x18011ec0u}}) {
             const uint32_t width = as_image(image).width;

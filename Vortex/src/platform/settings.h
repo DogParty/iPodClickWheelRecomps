@@ -48,11 +48,6 @@ struct Settings {
     // --- what this renderer can do that the iPod's could not (all default to the iPod's answer)
     unsigned render_scale = MIN_RENDER_SCALE;
     bool high_resolution_text = false;
-
-    // --- cheats -------------------------------------------------------------------------------
-    // Off by default and never on by accident: each one is a change to what the game itself
-    // would do, and belongs to the player rather than to the program. See src/game/cheats.h.
-    bool unlock_all_chapters = false;
 };
 
 // The one copy every part of the program reads. A platform applies it (Platform::apply_settings)

@@ -144,7 +144,7 @@ bool install_from_directory(const std::string& source_dir, const std::string& ga
 std::string locate_game(platform::Platform& platform, const std::string& data_dir) {
     const std::string game_dir = (fs::path(data_dir) / GAME_DIRECTORY_NAME).string();
     std::string why;
-    std::string message = "Choose the game's folder (12345), copied from your iPod";
+    std::string message = "Choose the game's folder (99999), copied from your iPod";
     while (!verify_installed(game_dir, why)) {
         std::fprintf(stderr, "game data: %s — %s\n", game_dir.c_str(), why.c_str());
         std::string chosen;

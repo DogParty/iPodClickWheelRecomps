@@ -4,6 +4,10 @@ build/
 build-*/
 target/
 __pycache__/
+# What common/tools/release.sh lays out to upload, and what it downloads to build it with;
+# every byte of both is rebuildable.
+release/
+.release-cache/
 
 # Anything derived from the original game binaries stays out of the repo.
 # A fresh clone regenerates all of it from the owner's own copy of each game:
@@ -21,6 +25,7 @@ objdump.txt
 !**/analysis/coverage/session-notes.md
 **/analysis/ghidra/**
 !**/analysis/ghidra/mg-ordinals.json
+**/reference/research/
 
 # The games themselves, wherever a copy lands.
 *.bin

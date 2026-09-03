@@ -10,7 +10,7 @@ deliberately removed; the reason is in the script's `PORTED` list.
 
 `python3 tools/port-from-lost.py --check` reports both.
 
-Source tree: `/Users/lucille/Documents/Projects/iPod-Reverse-Engineer/ipod-emulator/recomps/Lost`
+Source tree: `../Lost`
 
 | file | source SHA-256 | ported SHA-256 |
 |---|---|---|

@@ -1,5 +1,5 @@
 // The program's own settings (src/platform/settings.{h,cpp}): frame rate, the title readout, how
-// many pixels are drawn and how they are enlarged, and the cheats.
+// many pixels are drawn and how they are enlarged.
 //
 // These are the portable half of what a platform's settings window edits — the struct, the file
 // it is written to, and the rule that a file written against another meaning is not read. The
@@ -37,7 +37,6 @@ void test_defaults() {
     // answer and nothing else.
     check(fresh.render_scale == MIN_RENDER_SCALE, "the iPod's own resolution is the default");
     check(!fresh.high_resolution_text, "and its own text with it");
-    check(!fresh.unlock_all_chapters, "no cheat is on by default");
 }
 
 void test_text() {
@@ -48,7 +47,6 @@ void test_text() {
     written.pixel_perfect = true;
     written.render_scale = 3;
     written.high_resolution_text = true;
-    written.unlock_all_chapters = true;
 
     Settings read;
     settings_from_text(read, settings_to_text(written));
@@ -58,7 +56,6 @@ void test_text() {
     check(read.pixel_perfect, "so does whole multiples only");
     check(read.render_scale == 3, "so does the render scale");
     check(read.high_resolution_text, "so does text at the raster's resolution");
-    check(read.unlock_all_chapters, "and so does a cheat that was turned on");
 
     // A scale this build cannot draw is brought to the nearest one it can, rather than being
     // refused: a settings file that has been through a build offering more should give the
@@ -99,7 +96,6 @@ void test_persistence() {
     settings().scaling = Scaling::Nearest;
     settings().frame_rate = 30;
     settings().render_scale = 2;
-    settings().unlock_all_chapters = true;
     save_settings();
 
     // A fresh start: the platform's defaults first, then the player's settings over them.
@@ -109,7 +105,6 @@ void test_persistence() {
     check(settings().scaling == Scaling::Nearest, "and the saved settings are read back");
     check(settings().frame_rate == 30, "all of them");
     check(settings().render_scale == 2, "the render scale among them");
-    check(settings().unlock_all_chapters, "and a cheat stays on across a restart");
 
     settings() = Settings{};
     std::filesystem::remove_all(directory, error);

@@ -59,10 +59,10 @@ SOURCE = PROJECT.parent / "Mini Golf"
 #                      ported — it is the file that would name such a routine, and the emitter
 #                      reads it — and it is empty.
 #   src/runtime/runtime.cpp, src/libeapp/heap.cpp, src/gamedata/zip.cpp   moved to the shared
-#                        core on 2026-08-27 (recomps/common/src/ipod/...) together with their
+#                        core on 2026-08-27 (common/src/ipod/...) together with their
 #                        headers; the headers here are forwarding headers and stay in the list.
 #                        Moved by the Texas Hold'em recomp's block 0b; see its PLAN.md.
-#   tools/recomp/      the recompiler now lives in `recomps/common/tools/recomp` and is imported
+#   tools/recomp/      the recompiler now lives in `common/tools/recomp` and is imported
 #                      from there by both titles, so there is nothing left to copy. This is the
 #                      first thing to leave this list, and the intention is that everything does:
 #                      see ../../common/README.md for why copies were the wrong answer.

@@ -4,7 +4,7 @@ recomp, and record what was copied.
 
 PLAN.md § "What is inherited" explains the position: the recompiler and the parts of the runtime,
 platform and framework layers that had already proved identical between Mini Golf and Lost are
-compiled from `recomps/common/` and imported, never copied. What is copied is what still differs
+compiled from `common/` and imported, never copied. What is copied is what still differs
 between titles by a fact measured from a binary — the frame pump, the file and input models, the
 SDL window — plus the tools and test harness that have not been made shared yet. This script is
 the only way a file enters this tree from there; it is re-runnable; and it writes
@@ -66,7 +66,7 @@ SOURCE = PROJECT.parent / "Lost"
 #   tools/port-from-minigolf.py   this file's ancestor; this file replaces it.
 #   tools/oracle-emulator/   pinned separately, from the emulator tree, by reference/MANIFEST.md.
 #   src/runtime/runtime.cpp, src/libeapp/heap.cpp, src/gamedata/zip.cpp   moved to the shared
-#                        core on 2026-08-27 (recomps/common/src/ipod/...) together with their
+#                        core on 2026-08-27 (common/src/ipod/...) together with their
 #                        headers; the headers here are forwarding headers and stay in the list.
 #   Forwarding headers to the shared core (`src/framework/graphics.h`, `types.h`,
 #   `src/platform/save_store.h`, `text_entry.h`, `sdl3/music_decoder.h`, `src/runtime/memory.h`)

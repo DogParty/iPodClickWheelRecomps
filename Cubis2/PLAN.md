@@ -13,7 +13,7 @@ alone — with one exception this title forced and which is recorded in full bel
 for that is the emulator's, not this tree's.
 
 This is the **sixth** title to go through this process, and the fourth to start with
-`recomps/common/` in place. *Mini Golf* is finished — every one of its 333 functions is
+`common/` in place. *Mini Golf* is finished — every one of its 333 functions is
 hand-decompiled. *Lost*, *Texas Hold'em*, *The Sims Bowling* and *Vortex* run as pure
 recompilations with their oracles green. `../Mini Golf/PLAN.md`, `../Lost/PLAN.md`,
 `../HoldEm/PLAN.md`, `../Sims Bowling/PLAN.md` and `../Vortex/PLAN.md` are the record of how the
@@ -36,7 +36,7 @@ emulator.
 | | |
 |---|---|
 | image | `Cubis2_1_1_2563292.bin`, 695 800 bytes, loads flat at `0x18000000`, ends `0x180a9df8`. Header version `0x10001000`; `eapp-inspect` warns, as for Hold'em, Sims Bowling and Vortex, that its block-count word says 5 while seven framework blocks are present |
-| game data | `20 iPod games/Games_RO/99999/` — 114 files named by the game's own `Manifest.plist`, plus Apple's four installer files, ~10 MB. Three **cube sheet sets** (`classic/`, `jewel/`, `metallic/`, four `sheet-N-{c,w}.raw` each — TGAs under a `.raw` name, 16-bit grey-plus-alpha), four **backdrop themes** (`desert/`, `rainforest/`, `underwater/` and the shared `common0*` files, Windows BMPs under a `.pix` name), ten `fonts/*.raw`, nineteen `images/*.ipd`, eleven `strings/*.dat`, 21 loose `media/*.wav` sound effects, two `.m4a` music tracks (`g`, `m`), `Cubis2.raw.lcd5`. Plus **two files the game writes** (difference 3) |
+| game data | `Games_RO/99999/` — 114 files named by the game's own `Manifest.plist`, plus Apple's four installer files, ~10 MB. Three **cube sheet sets** (`classic/`, `jewel/`, `metallic/`, four `sheet-N-{c,w}.raw` each — TGAs under a `.raw` name, 16-bit grey-plus-alpha), four **backdrop themes** (`desert/`, `rainforest/`, `underwater/` and the shared `common0*` files, Windows BMPs under a `.pix` name), ten `fonts/*.raw`, nineteen `images/*.ipd`, eleven `strings/*.dat`, 21 loose `media/*.wav` sound effects, two `.m4a` music tracks (`g`, `m`), `Cubis2.raw.lcd5`. Plus **two files the game writes** (difference 3) |
 | entry vectors | 3: `0x180384d0` start-up, `0x180384cc` terminate (header slot 1), `0x1803852c` per-frame |
 | functions | **349** reachable by walking the control flow from the entry vectors alone; **1 382** once the probes' live edges, the image's stored function pointers and the code addresses its instructions form from the program counter are added and the emitter walks to a fixpoint (417 of those it found on its own) |
 | instructions | **64 827** ARM instructions recompiled — 113 234 lines of generated C++ in 63 files, emitted in 0.7 s. **0 unwalkable** |
@@ -139,7 +139,7 @@ the per-user data directory is `iPod Cubis 2/99999`, and the override is `CUBIS_
 ## Architecture
 
 ```
-recomps/Cubis2/
+Cubis2/
   PLAN.md                this document
   README.md              layout, building, testing, contributing a decompiled function
   CMakeLists.txt         adds ../common; targets cubis (SDL3) and cubis-headless (tests)
@@ -502,8 +502,8 @@ Neither has anything past the first level, the other two cube themes, the Option
 `python3 tools/port-from-vortex.py --check` reports, alongside the sixteen files adopted here,
 **two files changed on the Vortex side since the port**: `src/runtime/main.cpp` and
 `tests/unit/save_files_test.cpp`, both with modification times a few minutes after this tree took
-its copies. Nothing here wrote them, and `recomps/` is not in version control, so what changed
-cannot be recovered from this tree. It is recorded rather than resolved, because that is exactly
+its copies. Nothing here wrote them, and this tree was not yet in version control, so what
+changed cannot be recovered from it. It is recorded rather than resolved, because that is exactly
 what `reference/PORTED.md` exists to make visible — the copies drift, and the manifest is the only
 thing that ever notices. Anyone re-porting from Vortex should diff those two first.
 

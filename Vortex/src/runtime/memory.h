@@ -1,6 +1,6 @@
 // The guest address space — the shared core's, brought into this title's namespace.
 //
-// The definitions are in `recomps/common/src/ipod/runtime/memory.h`, which was identical
+// The definitions are in `common/src/ipod/runtime/memory.h`, which was identical
 // in both trees: the device is the same device. `memory.cpp` is still this title's,
 // because how much of each region is actually backed is measured per game, and it now
 // defines into `ipod`.

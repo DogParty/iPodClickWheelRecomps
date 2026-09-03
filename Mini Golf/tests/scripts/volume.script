@@ -1,0 +1,23 @@
+# Title -> name entry ("A", confirmed) -> main menu -> Volume, and the wheel turned while the
+# page is up: two clicks one way, a click and two the other, then back out. The level the wheel
+# sets is what this measures, against the pure recompilation (tests/vs-recomp.sh): the two
+# level pages read the wheel's slots directly, unlike the menus, and for a long time read the
+# wrong one — the slider never moved, and no other script turns the wheel on either page.
+200: select
+300: wheel +240
+400: wheel +240
+500: wheel +24
+800: select
+1100: select
+1500: select
+2000: wheel +8
+2400: select
+2900: wheel +8
+3100: shot
+3200: wheel +8
+3600: wheel -8
+3800: shot
+3900: wheel -16
+4300: shot
+4600: menu
+5200: quit

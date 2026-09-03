@@ -4,7 +4,7 @@ Hold'em recomp, and record what was copied.
 
 PLAN.md § "What is inherited" explains the position: the recompiler and the parts of the runtime,
 platform and framework layers that had already proved identical between titles are compiled from
-`recomps/common/` and imported, never copied. What is copied is what still differs between titles
+`common/` and imported, never copied. What is copied is what still differs between titles
 by a fact measured from a binary — the frame pump, the file and input models, the SDL window —
 plus the tools and test harness that have not been made shared yet. This script is the only way a
 file enters this tree from there; it is re-runnable; and it writes `reference/PORTED.md` with the

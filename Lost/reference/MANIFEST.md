@@ -22,8 +22,8 @@ checking, check it there first, then against the live tree if the two disagree.
 
 | what | taken from | at |
 |---|---|---|
-| `tools/oracle-emulator/src/` | `ipod-emulator/tools/eapp-loader/src/` | commit `54e1049` |
-| `tools/oracle-emulator/arm7tdmi/` | `ipod-emulator/tools/arm7tdmi/` | commit `54e1049` |
+| `tools/oracle-emulator/src/` | `<upstream>/tools/eapp-loader/src/` | commit `54e1049` |
+| `tools/oracle-emulator/arm7tdmi/` | `<upstream>/tools/arm7tdmi/` | commit `54e1049` |
 | `tools/oracle-emulator/Cargo.toml` | the Mini Golf recomp's, unchanged | commit `54e1049` |
 
 Unlike the Mini Golf recomp's pinned copy, this one carries **no added instruments**: the

@@ -36,7 +36,8 @@ if [ "${1:-}" = "clean" ]; then
     rm -rf "$here/build-switch"
 fi
 
-docker run --rm -v "$here":/work -w /work "$image" sh -lc '
+# The tree beside this one is mounted too: CMakeLists.txt takes the shared code from ../common.
+docker run --rm -v "$(dirname "$here")":/work -w "/work/$(basename "$here")" "$image" sh -lc '
     set -e
     cmake -B build-switch -DCMAKE_TOOLCHAIN_FILE=$DEVKITPRO/cmake/Switch.cmake -DMINIGOLF_SDL3=OFF
     cmake --build build-switch -j"$(nproc)"

@@ -1,23 +1,12 @@
 # Making a recomp of an iPod click-wheel game — the playbook
 
-This is the plan that made *Mini Golf*, *Lost*, *Texas Hold'em*, *The Sims Bowling* and
-*Vortex*, with
-every title-specific fact taken out and replaced by the step that measures it. It is written to
-be handed to an agent as one instruction:
+This is the plan that made *Mini Golf*, *Lost*, *Texas Hold'em*, *The Sims Bowling* and *Vortex*, with every title-specific fact taken out and replaced by the step that measures it. It is written to be handed to an agent as one instruction:
 
-> Read `recomps/NEW-RECOMP.md` and make a recomp for **GAME** using **FOLDER**.
+> Read `NEW-RECOMP.md` and make a recomp for **GAME** using **FOLDER** where GAME is the title (as in `Manifest.plist`'s `Name`) and FOLDER is the decrypted game's directory as
+copied off an iPod (`<id>/`, holding `Executables/<Name>_<ver>_<build>.bin`, `Manifest.plist`, and the game's data). Everything below assumes those two inputs and nothing else. Read `common/README.md` first — it says what is shared and what may not be assumed — and `Mini Golf/PLAN.md` § "Code quality", which binds every recomp unchanged.
 
-where GAME is the title (as in `Manifest.plist`'s `Name`) and FOLDER is the game's directory as
-copied off an iPod (`…/Games_RO/<id>/`, holding `Executables/<Name>_<ver>_<build>.bin`,
-`Manifest.plist`, and the game's data). Everything below assumes those two inputs and nothing
-else. Read `common/README.md` first — it says what is shared and what may not be assumed — and
-`Mini Golf/PLAN.md` § "Code quality", which binds every recomp unchanged.
-
-The deliverable is a directory `recomps/GAME/` in which the game **runs natively as a pure
-static recompilation, proven identical to the emulator** on recorded scripted sessions — call
-for call, word for word, and pixel for pixel on screenshots — with a plan of record that says
-what was established and what was not. Hand decompilation starts after that and is not part of
-"done" for the first pass.
+The deliverable is a directory `GAME/` in which the game **runs natively as a pure static recompilation, proven identical to the emulator** on recorded scripted sessions — call for call, word for word, and pixel for pixel on screenshots — with a plan of record that says
+what was established and what was not. Hand decompilation starts after that and is not part of "done" for the first pass.
 
 ---
 
@@ -26,15 +15,14 @@ what was established and what was not. Hand decompilation starts after that and 
 Every title has the same shape, and the shape is not up for redesign:
 
 * The ARM image is **statically recompiled** by the shared recompiler
-  (`common/tools/recomp/`): one C++ function per ARM function, running the same instructions on
-  a small CPU-state struct. That is the pure recompilation, and it is the oracle that never
+  (`common/tools/recomp/`): one C++ function per ARM function, running the same instructions on   a small CPU-state struct. That is the pure recompilation, and it is the oracle that never
   expires.
 * The iPod's application frameworks (OpenGL ES, audio, file I/O, the click wheel, settings, the
   music library) are reimplemented as a host library, `libeapp`, behind typed C++ interfaces in
   `src/framework/`. What is the same for every title lives in `common/` and is compiled from
-  there; what differs by a *measured fact about this binary* lives in `recomps/GAME/`.
+  there; what differs by a *measured fact about this binary* lives in `GAME/`.
 * The verification oracle is the emulator (`tools/eapp-loader` + `tools/arm7tdmi`), **pinned**
-  as a copy under `recomps/GAME/tools/oracle-emulator/` at a named commit, never the live tree.
+  as a copy under `GAME/tools/oracle-emulator/` at a named commit, never the live tree.
   A scripted session is recorded from it as a framework-call log and compared with the recomp's
   log of the same script (`tests/diff.sh`); screenshots are compared at a threshold
   (`tests/frames.sh`).
@@ -47,12 +35,12 @@ the fix goes in the emulator tree in its own commit, followed by a re-pin and re
 
 ---
 
-## 1. Before writing a line: measure the title (about an hour)
+## 1. Before writing a line: measure the title
 
 Do all of this with the **newest existing title's tools** (the one whose `PLAN.md` was started
 most recently — the chain so far is Mini Golf → Lost → HoldEm → Sims Bowling → Vortex, each
 ported from the one before; the newest is the one to port from too) run against the new image, and put everything under
-`recomps/GAME/analysis/` with a `README.md` saying how each file was made. Every number in the
+`GAME/analysis/` with a `README.md` saying how each file was made. Every number in the
 plan you write in § 2 must be answered by a file here.
 
 1. `python3 <newest>/tools/survey.py --image FOLDER/Executables/<image>.bin > analysis/survey.txt`
@@ -103,7 +91,7 @@ plan you write in § 2 must be answered by a file here.
 
 ## 2. Write the plan, then the scaffold (block 0, ~30 min)
 
-`recomps/GAME/PLAN.md` is the plan of record. Its shape is the one every title uses; copy the
+`GAME/PLAN.md` is the plan of record. Its shape is the one every title uses; copy the
 newest one's headings and replace the content:
 
 * **What GAME is** — a table of measured numbers (image, size, load address, vectors, functions
@@ -127,10 +115,10 @@ newest one's headings and replace the content:
 
 Then the scaffold:
 
-1. **Create the directory** `recomps/GAME/` (the name is the title's, with spaces if it has
+1. **Create the directory** `GAME/` (the name is the title's, with spaces if it has
    them — `Sims Bowling`, `Mini Golf`) with `analysis/`, `reference/`, `tools/`, `tests/scripts/`,
-   `tests/expected/`, `src/game/` (empty). `recomps/` is gitignored at the repository root; the
-   directory is the deliverable and the plan is its record.
+   `tests/expected/`, `src/game/` (empty). The directory sits at the root of this repository
+   beside the other titles and `common/`; it is the deliverable, and the plan is its record.
 2. Choose the **namespace**: one lowercase word (`bowling`, `holdem`, `lost`, `minigolf`). It
    becomes the C++ namespace, the CMake targets (`GAME` and `GAME-headless`), the option prefix
    (`GAME_*`), the environment variables and the Linux data directory. The macOS data directory
@@ -301,7 +289,7 @@ loaders next, the engine last, each swap diffed.
 
 ## 6. What "done" looks like
 
-* `recomps/GAME/` with `PLAN.md`, `README.md` (layout, building, testing, playing, debugging
+* `GAME/` with `PLAN.md`, `README.md` (layout, building, testing, playing, debugging
   aids, status), `analysis/README.md`, `reference/MANIFEST.md` and `reference/PORTED.md`.
 * `ctest --test-dir build` green: the unit tests, every recorded case in semantic and exact
   form, every screenshot case. The SDL target builds and reaches the first screen.

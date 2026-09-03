@@ -10,8 +10,8 @@ Everything lives in this folder. The emulator tree is touched only for one small
 (a `--call-log=FILE` flag on `play`, see step 3) and is otherwise left alone.
 
 **The emulator tree is a moving target** (other people and agents are changing it while this
-work happens), so every emulator file this plan cites — `lib.rs`, `play.rs`, `arm.rs`, the
-`reversing/` dossiers, research/13 — is snapshotted in `reference/` with a `MANIFEST.md` giving
+work happens), so every upstream file this plan cites — `lib.rs`, `play.rs`, `arm.rs`, the
+`reversing/` dossiers — is snapshotted in `reference/` with a `MANIFEST.md` giving
 the commit and checksums. Code and comments cite the **`reference/` copies**. Refreshing the
 snapshot is a deliberate step: re-copy, update the manifest, re-check every citation.
 
@@ -127,7 +127,7 @@ the tests, and how to contribute a decompiled function, and is kept current as t
 ## Architecture (decide once, now)
 
 ```
-recomps/Mini Golf/
+Mini Golf/
   tools/emit.py            ARM → C++ static recompiler (Python, reads the .bin + functions.tsv)
   tools/DumpFuncs.java     Ghidra headless post-script (already here)
   gen/                     GENERATED, never hand-edited: game_NNNN.cpp, funcs.h, calltable.cpp
@@ -274,7 +274,7 @@ Port in the order the boot needs them; after each group re-run `tests/diff.sh bo
 
 ### 5 · 1 h — SDL3 platform
 * Window 320×240 ×3, `SDL_Texture` streaming from the 24-bit framebuffer on `present()`.
-* Keys: ↑/↓ detents (8 per row, see research/13 §2.2), Space = Select, W/A/S/D = the four
+* Keys: ↑/↓ detents (8 per row), Space = Select, W/A/S/D = the four
   buttons, Q quits — same as `play` so muscle memory transfers.
 * SDL3 audio stream for `.wav` SFX; `afplay` for `.m4a` music (macOS only, flagged).
 * **Checkpoint C (the end-of-day demo):** title → name entry → a hole played, natively. Compare
@@ -1670,7 +1670,7 @@ fixed in the Lost tree on the same day.
   real effect and not a tuned one.
 
 **Still divergent, and this is the argument for a shared core.** The same change set has now been
-written twice, by hand, into two copies of the same rasteriser. `recomps/common/` is named in the
+written twice, by hand, into two copies of the same rasteriser. `common/` is named in the
 Lost tree's "Not today" list; this entry is the strongest case yet for doing it.
 
 ### 2026-08-27 (closing it, here too) — SDL outliving nothing, a second time
@@ -1711,7 +1711,7 @@ added as a test that would fail wherever there is not one.
 
 ### 2026-08-27 (a shared core, step one) — the recompiler stops being copied
 
-The recompiler moved to `recomps/common/tools/recomp/` and both titles import it from there. This
+The recompiler moved to `common/tools/recomp/` and both titles import it from there. This
 tree no longer has a `tools/recomp/`.
 
 Two things this title had to hand over as parameters rather than assume. The namespace, which
@@ -1729,7 +1729,7 @@ The reasoning, and what is expected to follow, is in `../common/README.md`.
 ### 2026-08-27 (a shared core, step two) — the first C++ out of the copies
 
 This tree no longer has `src/platform/save_store.{h,cpp}`, `src/platform/text_entry.{h,cpp}` or a
-`framework/types.h` of its own. They are compiled once from `recomps/common/` into `ipod_core`,
+`framework/types.h` of its own. They are compiled once from `common/` into `ipod_core`,
 which `minigolf_common` links, and what is left at those paths is a forwarding header that pulls
 the shared names into `minigolf::platform` with `using` declarations.
 
@@ -1742,7 +1742,7 @@ The reasoning and the mechanism are in `../common/README.md`.
 
 `src/libeapp/gles.{h,cpp}` no longer exist here. The iPod's GL ES driver was one piece of firmware
 and both titles called the same one, so there is one reimplementation of it in
-`recomps/common/src/ipod/libeapp/gles.cpp`, and it is Lost's — which had every function this one
+`common/src/ipod/libeapp/gles.cpp`, and it is Lost's — which had every function this one
 had and twenty more, while this one had none of its own. `framework/graphics.h` and
 `runtime/memory.h` went the same way, and `fatal` was split out of `runtime.{h,cpp}`.
 
@@ -1771,7 +1771,7 @@ six fail for that reason and no other; `tests/check-recomp.sh` or a manual
 
 ### 2026-08-27 (a shared core, step four) — this tree's decoder goes the other way
 
-`src/platform/sdl3/music_decoder.{h,cpp}` moved to `recomps/common/src/ipod/platform/sdl3/` and
+`src/platform/sdl3/music_decoder.{h,cpp}` moved to `common/src/ipod/platform/sdl3/` and
 what is left here is a forwarding header. Lost was still spawning `afplay` for its music; it now
 uses this decoder, and gained volume and a real stop with it.
 

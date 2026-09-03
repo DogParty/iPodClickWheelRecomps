@@ -10,7 +10,7 @@ swap proven against the recompiled version.
 Everything lives in this folder. The emulator tree is read, snapshotted, and otherwise left alone.
 
 This is the **fifth** title to go through this process, and the third to start with
-`recomps/common/` in place. *Mini Golf* is finished — every one of its 333 functions is
+`common/` in place. *Mini Golf* is finished — every one of its 333 functions is
 hand-decompiled. *Lost*, *Texas Hold'em* and *The Sims Bowling* run as pure recompilations with
 their oracles green. `../Mini Golf/PLAN.md`, `../Lost/PLAN.md`, `../HoldEm/PLAN.md` and
 `../Sims Bowling/PLAN.md` are the record of how the first four were done, and
@@ -32,7 +32,7 @@ the emulator at commit `96bfe90`.
 | | |
 |---|---|
 | image | `vortex_1_1_2563290.bin`, 414 600 bytes, loads flat at `0x18000000`, ends `0x18065388`. Header version `0x10001000`; `eapp-inspect` warns, as for Hold'em and Sims Bowling, that its block-count word says 5 while seven framework blocks are present |
-| game data | `20 iPod games/Games_RO/12345/` — 96 shipped files, ~30 MB. 62 `.ipd` textures (31 `Backgrounds/` at 320×240 and their 256×256 `_Door1` halves, 15 `UI3/` help and bonus sheets in eleven languages, fonts, bats, balls), one **texture pack** `tex` (2 164 044 bytes, 46 records), one **sound bank** `media/sfx` (2 563 812 bytes, 47 effects), three music tracks `a.m4a`/`b.m4a`/`c.m4a`, `gamedata/levels/levels` (8 640 bytes), `fonts/*.txt` glyph tables with their `.ipd` atlases, eleven `Localization/<lang>.lproj/text.strings`, `Resources/<lang>/` (a `Description.xml` and a guide `.jpg` each), `Vortex.raw.lcd5`. Plus **three files the game writes** (below) |
+| game data | `Games_RO/12345/` — 96 shipped files, ~30 MB. 62 `.ipd` textures (31 `Backgrounds/` at 320×240 and their 256×256 `_Door1` halves, 15 `UI3/` help and bonus sheets in eleven languages, fonts, bats, balls), one **texture pack** `tex` (2 164 044 bytes, 46 records), one **sound bank** `media/sfx` (2 563 812 bytes, 47 effects), three music tracks `a.m4a`/`b.m4a`/`c.m4a`, `gamedata/levels/levels` (8 640 bytes), `fonts/*.txt` glyph tables with their `.ipd` atlases, eleven `Localization/<lang>.lproj/text.strings`, `Resources/<lang>/` (a `Description.xml` and a guide `.jpg` each), `Vortex.raw.lcd5`. Plus **three files the game writes** (below) |
 | entry vectors | 3: `0x18021798` start-up, `0x18021794` terminate (header slot 1), `0x180217f4` per-frame |
 | functions | **543** reachable by walking from the vectors; **753** once the probes' live edges, the image's stored function pointers and the code addresses its instructions form from the program counter are added and the emitter walks to a fixpoint (236 of those it found on its own) |
 | instructions | **39 247** ARM instructions recompiled — 71 402 lines of generated C++ in 34 files  emitted in half a second  **0 unwalkable** |
@@ -132,7 +132,7 @@ is a defect.
 ## Architecture
 
 ```
-recomps/Vortex/
+Vortex/
   PLAN.md                this document
   README.md              layout, building, testing, contributing a decompiled function
   CMakeLists.txt         adds ../common; targets vortex (SDL3) and vortex-headless (tests)

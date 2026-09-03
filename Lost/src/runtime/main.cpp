@@ -27,6 +27,7 @@
 #include "platform/platform.h"
 #include "platform/settings.h"
 #include "platform/text_entry.h"
+#include "platform/windows_console.h"
 #include "runtime/cpu.h"
 #include "runtime/eapp_image.h"
 #include "runtime/memory.h"
@@ -60,6 +61,7 @@ struct Options {
     std::string script_path;    // scripted input, FRAME: ACTION per line
     std::string call_log_path;  // where to write the framework-call log
     std::string fixed_time;     // HH:MM shown by the game's clock, for reproducible runs
+    std::string program_name;   // argv[0], for a message that says how to run it again
     unsigned frame_limit = 0;   // stop after this many frames; 0 = run until quit
     // Behave as the emulator's own harness did — no button press times, and no quitting when the
     // game suspends itself. Only the oracle wants this; see tests/diff.sh.
@@ -67,8 +69,10 @@ struct Options {
     // Render the flat-fill pipeline as the emulator does, which is the one rendering decision
     // the two make differently. Only the picture oracle wants this; see tests/frames.sh.
     bool emulator_graphics = false;
-    unsigned frames_per_second =
-        60;  // the game's own timebase (miscTBD #9 advances 1/60 s per call)
+    // The pace before the saved settings are read, and what --fps= sets. 30 is the default
+    // everywhere (platform/settings.h); the game's own timebase is 60 (miscTBD #9 advances
+    // 1/60 s per call), which is what --fps=60 gives.
+    unsigned frames_per_second = 30;
     bool frames_per_second_given = false;  // --fps= was asked for, so it beats the saved rate
     // --render-scale= and --cheats=, for a headless run that wants one without a settings file.
     // Both outrank the saved setting for the run they are given on, as --fps= does, and both are
@@ -115,6 +119,7 @@ void report_frame_dumps(unsigned frame) {
 
 Options parse_options(int argc, char** argv) {
     Options options;
+    options.program_name = argc > 0 ? argv[0] : "lost";
     const std::pair<const char*, std::string*> text_flags[] = {
         {"--gamedir=", &options.game_dir},       {"--script=", &options.script_path},
         {"--call-log=", &options.call_log_path}, {"--install=", &options.install_from},
@@ -905,7 +910,10 @@ int run(Options options) {
     if (options.game_dir.empty()) {
         options.game_dir = gamedata::locate_game(*host, platform::data_directory());
         if (options.game_dir.empty()) {
-            std::fprintf(stderr, "no game files: nothing to run\n");
+            std::fprintf(stderr,
+                         "no game files: nothing to run. To install them without the file "
+                         "browser: %s --install-zip=PATH-TO-THE-GAME.zip\n",
+                         options.program_name.c_str());
             return EXIT_FAILURE;
         }
     }
@@ -1109,7 +1117,7 @@ int run(Options options) {
         // is telling it that it is running — and the buffer is still the magenta that marks an
         // un-drawn region, which the window would otherwise show as the game's opening screen.
         if (gfx::anything_drawn()) {
-    host->present(gfx::screen_pixels(), gfx::screen_width(), gfx::screen_height());
+            host->present(gfx::screen_pixels(), gfx::screen_width(), gfx::screen_height());
         }
         host->wait_for_next_frame();
     }
@@ -1120,5 +1128,9 @@ int run(Options options) {
 }  // namespace lost
 
 int main(int argc, char** argv) {
+    // On Windows this is a windowed program with no console of its own: it joins the terminal
+    // that started it, if there was one, and otherwise says anything fatal in a message box.
+    // Everywhere else, and in the headless build, it does nothing at all.
+    lost::platform::windows_console_begin("Lost");
     return lost::run(lost::parse_options(argc, argv));
 }

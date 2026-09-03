@@ -18,9 +18,17 @@
 # tree configures at every stage of PLAN.md.
 
 cmake_minimum_required(VERSION 3.21)
-project(vortex LANGUAGES CXX)
+# The oldest macOS a release runs on, set before `project()` because that is when it is
+# read. 11 is the first that ran on Apple silicon, so one number covers both architectures.
+if(APPLE AND NOT CMAKE_OSX_DEPLOYMENT_TARGET)
+    set(CMAKE_OSX_DEPLOYMENT_TARGET 11.0 CACHE STRING "The oldest macOS this build runs on")
+endif()
+project(vortex VERSION 1.0.0 LANGUAGES CXX)
 if(APPLE)
     enable_language(OBJCXX)  # the SDL build's menu bar (src/platform/sdl3/macos_menu.mm)
+endif()
+if(WIN32)
+    enable_language(RC)  # the manifest that gives the settings window its controls' modern look
 endif()
 
 set(CMAKE_CXX_STANDARD 17)
@@ -81,8 +89,10 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 # The shared core: code that belongs to no single title, compiled once from
-# `recomps/common/` rather than copied into this tree. See ../common/README.md.
+# `common/` rather than copied into this tree. See ../common/README.md.
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../common ${CMAKE_CURRENT_BINARY_DIR}/common)
+# The shared CMake: the macOS .app, and whatever else every title shapes the same way.
+include(${CMAKE_CURRENT_SOURCE_DIR}/../common/cmake/IpodMacBundle.cmake)
 
 add_library(vortex_common INTERFACE)
 if(MSVC)
@@ -90,6 +100,11 @@ if(MSVC)
     target_compile_definitions(vortex_common INTERFACE _CRT_SECURE_NO_WARNINGS)
 else()
     target_compile_options(vortex_common INTERFACE -fno-exceptions -fno-rtti)
+endif()
+if(MINGW)
+    # MinGW's printf is Microsoft's old C runtime's by default, which has no %zu and whose
+    # format checks say so under -Werror; this asks for MinGW's own, which is C99.
+    target_compile_definitions(vortex_common INTERFACE __USE_MINGW_ANSI_STDIO=1)
 endif()
 target_link_libraries(vortex_common INTERFACE Threads::Threads)
 target_link_libraries(vortex_common INTERFACE ipod_core)
@@ -140,6 +155,19 @@ endif()
 
 if(VORTEX_GEN_DIR)
     file(GLOB GEN_SOURCES  CONFIGURE_DEPENDS ${VORTEX_GEN_DIR}/*.cpp)
+    if(NOT GEN_SOURCES)
+        # Say it here rather than let the link fail. Without the generated half, everything
+        # compiles and the link ends in a page of undefined symbols that names the symptom and
+        # not the cause. The generated code is not in the repository on purpose: it is a
+        # translation of the game's own binary. See README.md ("Building").
+        message(FATAL_ERROR
+            "no generated sources in ${VORTEX_GEN_DIR}.\n"
+            "This title compiles machine-translated code that is not kept in the repository. "
+            "Write it first, from your own copy of the game:\n"
+            "    python3 tools/funcs.py --image PATH/TO/Executables/<the game>.bin\n"
+            "    python3 tools/emit.py\n"
+            "See README.md, \"Building\".")
+    endif()
 endif()
 file(GLOB RUNTIME_SOURCES  CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/runtime/*.cpp)
 file(GLOB LIBEAPP_SOURCES  CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/libeapp/*.cpp)
@@ -158,6 +186,9 @@ list(APPEND SDL3_SOURCES ${IPOD_CORE_SDL3_SOURCES})
 if(APPLE)
     file(GLOB SDL3_OBJC_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/sdl3/*.mm)
     list(APPEND SDL3_SOURCES ${SDL3_OBJC_SOURCES})
+endif()
+if(WIN32)
+    list(APPEND SDL3_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/sdl3/win32_settings.rc)
 endif()
 file(GLOB NULL_SOURCES     CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/null/*.cpp)
 file(GLOB UNIT_TEST_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit/*.cpp)
@@ -220,19 +251,29 @@ endif()
 # Executables
 # ---------------------------------------------------------------------------------------------
 
+# Link a program against the hand-written libraries and the shared core. The static libraries
+# reference each other in both directions — gen calls libeapp, libeapp calls back into the
+# runtime, and the shared core's rasteriser calls this title's call log — which Apple's linker
+# and MSVC's resolve in one pass. A GNU-style linker scans each archive once, in order, so those
+# go between --start-group and --end-group, which has it rescan them until nothing is left
+# unresolved. The core is named by file there rather than by target: as a target it is already
+# an interface dependency of every library, and CMake would move it out of the group.
+function(vortex_link_core NAME)
+    if(APPLE OR MSVC)
+        target_link_libraries(${NAME} PRIVATE vortex_strict ${VORTEX_CORE_LIBS})
+    else()
+        target_link_libraries(${NAME} PRIVATE vortex_strict -Wl,--start-group
+                              ${VORTEX_CORE_LIBS} $<TARGET_FILE:ipod_core> -Wl,--end-group)
+    endif()
+endfunction()
+
 function(vortex_add_executable NAME PLATFORM_SOURCES)
     if(NOT EXISTS ${MAIN_SOURCE} OR NOT VORTEX_CORE_LIBS)
         message(STATUS "${NAME}: runtime not written yet — target skipped")
         return()
     endif()
     add_executable(${NAME} ${MAIN_SOURCE} ${PLATFORM_SOURCES})
-    target_link_libraries(${NAME} PRIVATE vortex_strict ${VORTEX_CORE_LIBS})
-    # Static libraries reference each other in both directions (gen calls libeapp, libeapp
-    # calls back into the runtime). Apple's linker resolves that in one pass; GNU-style
-    # single-pass linkers need the group listed twice.
-    if(NOT APPLE)
-        target_link_libraries(${NAME} PRIVATE ${VORTEX_CORE_LIBS})
-    endif()
+    vortex_link_core(${NAME})
 endfunction()
 
 if(NULL_SOURCES)
@@ -257,9 +298,32 @@ if(VORTEX_SDL3 AND SDL3_SOURCES)
         target_link_libraries(vortex PRIVATE ${VORTEX_SDL3_TARGET})
         if(APPLE)
             # Cocoa for the settings window; AudioToolbox to decode the AAC music, which SDL does
-            # not (recomps/common/src/ipod/platform/sdl3/music_decoder.cpp). Both are system
+            # not (common/src/ipod/platform/sdl3/music_decoder.cpp). Both are system
             # frameworks.
             target_link_libraries(vortex PRIVATE "-framework Cocoa" "-framework AudioToolbox")
+            # A double-clickable .app carrying its own SDL, rather than a bare executable
+            # linked against whatever SDL this machine happens to have.
+            # The SDL it linked against is named for the bundle, because a framework's
+            # install name says nothing about where the framework came from and there
+            # would be nothing for the bundling step to go and find. A pkg-config SDL is
+            # a plain dylib and is found the ordinary way, so it is not named here.
+            set(MAC_CARRY "")
+            if(TARGET SDL3::SDL3)
+                set(MAC_CARRY "$<TARGET_FILE:SDL3::SDL3>")
+            endif()
+            ipod_macos_app_bundle(vortex "Vortex" "org.ipodrecomp.vortex"
+                                  ${PROJECT_VERSION} ${MAC_CARRY})
+        elseif(WIN32)
+            # The common controls and the visual-styles API, for the settings window
+            # (src/platform/sdl3/win32_settings.cpp); Media Foundation and COM to decode the
+            # AAC music (music_decoder.cpp). All of them ship with Windows.
+            target_link_libraries(vortex PRIVATE comctl32 uxtheme mfplat mfreadwrite mfuuid
+                                  ole32)
+            # A game, not a command-line tool: no console window behind the game's own. Its
+            # messages still reach a terminal that started it, and anything fatal is a message
+            # box (common/src/ipod/platform/windows_console.h). The headless build is
+            # deliberately not this: its output is the whole point of it.
+            set_target_properties(vortex PROPERTIES WIN32_EXECUTABLE TRUE)
         endif()
     endif()
 elseif(VORTEX_SDL3)
@@ -277,12 +341,7 @@ if(TRUE)
     foreach(TEST_SOURCE ${UNIT_TEST_SOURCES})
         get_filename_component(TEST_NAME ${TEST_SOURCE} NAME_WE)
         add_executable(unit_${TEST_NAME} ${TEST_SOURCE})
-        target_link_libraries(unit_${TEST_NAME} PRIVATE vortex_strict ${VORTEX_CORE_LIBS})
-        if(NOT APPLE)
-            # As for the executables: the static libraries reference each other both ways, and a
-            # single-pass linker needs the group listed twice.
-            target_link_libraries(unit_${TEST_NAME} PRIVATE ${VORTEX_CORE_LIBS})
-        endif()
+        vortex_link_core(unit_${TEST_NAME})
         add_test(NAME unit_${TEST_NAME} COMMAND unit_${TEST_NAME})
     endforeach()
 endif()

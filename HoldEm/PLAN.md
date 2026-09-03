@@ -10,7 +10,7 @@ same scripted input. Hand decompilation starts today and does not finish today: 
 Everything lives in this folder. The emulator tree is read, snapshotted, and otherwise left alone.
 
 This is the **third** title to go through this process, and the first to start after
-`recomps/common/` exists. *Mini Golf* is finished — every one of its 333 functions is
+`common/` exists. *Mini Golf* is finished — every one of its 333 functions is
 hand-decompiled. *Lost* runs as a pure recompilation with three oracles green and its
 decompilation barely begun. Between them they produced the machinery, and then they produced the
 argument for the shared core: two copies of the same runtime drifted, and a fix made in one tree
@@ -33,7 +33,7 @@ the Lost tools against this image, and from two scripted sessions through the em
 | | |
 |---|---|
 | image | `HoldEm_1_1_2563291.bin`, 371 924 bytes, loads flat at `0x18000000`, ends `0x1805acd4`. Header version `0x10001000`; `eapp-inspect` warns that its block-count word says 5 while eight framework blocks are present |
-| game data | `20 iPod games/Games_RO/33333/` — 295 files, ~80 MB. 111 `.ipd` textures, 89 `.anm` character animations, 15 `.blob` packs, 33 `.strings`, 15 `.txt` tables, two music tracks (`t.m4a` 3.1 MB, `c.m4a` 7.6 MB), `Holdem.raw.lcd5` |
+| game data | `Games_RO/33333/` — 295 files, ~80 MB. 111 `.ipd` textures, 89 `.anm` character animations, 15 `.blob` packs, 33 `.strings`, 15 `.txt` tables, two music tracks (`t.m4a` 3.1 MB, `c.m4a` 7.6 MB), `Holdem.raw.lcd5` |
 | entry vectors | 3: `0x180315c8` start-up, `0x180315c4` terminate (header slot 1), `0x18031624` per-frame |
 | functions | **872** reachable by walking from the vectors; **951** once the boot's live edges and the image's stored function pointers are added and the emitter walks to a fixpoint (500 of those it found on its own) |
 | instructions | **53 264** ARM instructions recompiled — 89 302 lines of generated C++, emitted in half a second, **0 unwalkable** |
@@ -133,7 +133,7 @@ override is `HOLDEM_DATA_DIR`. A `lost` or `minigolf` anywhere in this tree is a
 ## Architecture
 
 ```
-recomps/HoldEm/
+HoldEm/
   PLAN.md                this document
   README.md              layout, building, testing, contributing a decompiled function
   CMakeLists.txt         adds ../common; targets holdem (SDL3) and holdem-headless (tests)

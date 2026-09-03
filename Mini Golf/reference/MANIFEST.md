@@ -5,7 +5,7 @@ active development by other people and agents, so the plan and the code cite **t
 not the live tree. To refresh: re-copy, update this manifest, and re-check every citation.
 
 - Snapshot taken: 2026-08-20T20:52Z
-- ipod-emulator commit: `f28c21364c459ca847909dc7201a3a0bddc5e340` (2026-08-18); the eapp-loader
+- upstream commit: `f28c21364c459ca847909dc7201a3a0bddc5e340` (2026-08-18); the eapp-loader
   sources below include **uncommitted** working-tree edits (`--callgraph-dump` in play.rs, covscan.rs).
 - Game image: `Minigolf_1_1_2563296.bin`, 227868 bytes, sha256 `5a80bf1a0d595a7be65c5e4bdda580a7bc608e781598a7165f95d8dfcff9bab4` (not copied — it is the user's game data)
 
@@ -26,7 +26,6 @@ not the live tree. To refresh: re-copy, update this manifest, and re-check every
 | `reversing/asyncfileio-abi.md` | `../reversing/asyncfileio-abi.md` | `9b6aebbb88122f04…` |
 | `reversing/framework-functions.json` | `../reversing/framework-functions.json` | `869120b6be4fcc1f…` |
 | `reversing/opengles-names.json` | `../reversing/opengles-names.json` | `e8ac02aab69271f5…` |
-| `research/13-do-the-games-load.md` | `research/13-do-the-games-load.md` | `2a8794d45cb2adb1…` |
 
 ## What each copy is used for
 
@@ -36,4 +35,3 @@ not the live tree. To refresh: re-copy, update this manifest, and re-check every
 - `arm7tdmi/*.rs` — `add_with_carry`, `shift_imm`, `shift_reg`: the flag and barrel-shifter rules the emitter ports verbatim.
 - `reversing/asyncfileio-abi.md` — commentary on the file-I/O ABI.
 - `reversing/framework-functions.json`, `opengles-names.json` — ordinal → name tables used to name the `ipod_eapp.h` functions.
-- `research/13-do-the-games-load.md` — wheel detents per row (§2.2) and how the titles boot.

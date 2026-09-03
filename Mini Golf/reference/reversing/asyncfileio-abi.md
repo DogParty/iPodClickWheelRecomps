@@ -346,8 +346,8 @@ Started on it. What is established, from the loader at `0x0024e380`–`0x0024e4a
 | `+0x264` | freed on teardown | |
 | `+0x268` | **the AsyncFileIO subsystem** — exactly the field every `AsyncFileIO` shim loads with `ldr r0,[r0,#0x268]` | |
 
-The load sequence is: DRM check at `0x00131874` (research/13's function, reached from `0x0024e3c0`),
-and only on success the header validator `0x001222c4`, which checks `"eapp"`, version `0x10001000`,
+The load sequence is: the firmware's own launch checks, and on success the header validator
+`0x001222c4`, which checks `"eapp"`, version `0x10001000`,
 block count ≤ 5, then walks and resolves the framework import blocks by their `0x13061973` /
 `0x29061968` magics. The eApp load region is configured at `0x000df0e4`: base `0x18000000`,
 size `0x100000`.
@@ -3423,8 +3423,8 @@ implemented, and two more (`#160`, `#168`) turned up in TWA, a title it never sc
 is now a tool — `tools/eapp-loader/src/bin/covscan.rs` — and the number is reproducible:
 
 ```
-covscan "20 iPod games/Games_RO" --impl=tools/eapp-loader/src/bin/play.rs --per-title
-covscan "20 iPod games/Games_RO" --verify     # reproduces §18.1's Minigolf/Zuma/Pac-Man rows
+covscan "Games_RO" --impl=tools/eapp-loader/src/bin/play.rs --per-title
+covscan "Games_RO" --verify     # reproduces §18.1's Minigolf/Zuma/Pac-Man rows
 ```
 
 `--verify` is the control. It reproduces the three §18.1 rows that were hand-counted without

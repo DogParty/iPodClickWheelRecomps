@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- The .app's description of itself. Configured by common/cmake/IpodMacBundle.cmake; the
+     placeholders are CMake's, not Xcode's. -->
+<plist version="1.0">
+<dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleExecutable</key>
+    <string>@IPOD_BUNDLE_EXECUTABLE@</string>
+    <key>CFBundleIdentifier</key>
+    <string>@IPOD_BUNDLE_IDENTIFIER@</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>@IPOD_BUNDLE_NAME@</string>
+    <key>CFBundleDisplayName</key>
+    <string>@IPOD_BUNDLE_NAME@</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>@IPOD_BUNDLE_VERSION@</string>
+    <key>CFBundleVersion</key>
+    <string>@IPOD_BUNDLE_VERSION@</string>
+    <key>LSMinimumSystemVersion</key>
+    <string>@CMAKE_OSX_DEPLOYMENT_TARGET@</string>
+    <key>LSApplicationCategoryType</key>
+    <string>public.app-category.games</string>
+    <!-- The renderer draws at the window's real resolution (Settings ▸ Graphics), so the window
+         must not be stretched from a 1x backing store on a Retina display. -->
+    <key>NSHighResolutionCapable</key>
+    <true/>
+    <key>NSSupportsAutomaticGraphicsSwitching</key>
+    <true/>
+    <key>NSHumanReadableCopyright</key>
+    <string>@IPOD_BUNDLE_COPYRIGHT@</string>
+</dict>
+</plist>

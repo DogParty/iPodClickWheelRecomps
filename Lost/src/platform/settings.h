@@ -37,7 +37,10 @@ constexpr unsigned MIN_RENDER_SCALE = 1;
 constexpr unsigned MAX_RENDER_SCALE = 8;
 
 struct Settings {
-    unsigned frame_rate = 60;     // frames a second to pace to; 0 runs as fast as the machine can
+    // Frames a second to pace to; 0 runs as fast as the machine can. The game's own clock
+    // advances a sixtieth of a second a frame whatever the pace, so 60 is the speed its timers
+    // were written for and 30 is that at half speed, which is the default across every title.
+    unsigned frame_rate = 30;
     bool show_frame_rate = true;  // the live rate in the window title
     Scaling scaling = Scaling::Sharp;
     bool pixel_perfect = false;  // enlarge by whole multiples only, and border the rest

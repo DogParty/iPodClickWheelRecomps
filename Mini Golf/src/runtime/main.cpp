@@ -27,6 +27,7 @@
 #include "platform/platform.h"
 #include "platform/settings.h"
 #include "platform/text_entry.h"
+#include "platform/windows_console.h"
 #include "runtime/cpu.h"
 #include "runtime/eapp_image.h"
 #include "runtime/memory.h"
@@ -34,6 +35,9 @@
 
 #include <algorithm>
 #include <cstdio>
+#if defined(_WIN32)
+#include <windows.h>
+#endif
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
@@ -59,6 +63,7 @@ struct Options {
     std::string call_log_path;  // where to write the framework-call log
     std::string install_zip;    // install the game's files from this zip before running
     std::string fixed_time;     // HH:MM shown by the game's clock, for reproducible runs
+    std::string program_name;   // argv[0], for a message that says how to run it again
     unsigned frame_limit = 0;   // stop after this many frames; 0 = run until quit
     // Behave as the emulator's own harness did — no button press times, and no quitting when the
     // game suspends itself. Only the oracle wants this; see tests/diff.sh.
@@ -68,8 +73,10 @@ struct Options {
     // decompiled build so it and the pure recompilation are drawing the same game
     // (game/host_text.h). Playing with it only takes features away.
     bool no_port_additions = false;
-    unsigned frames_per_second =
-        60;  // the game's own timebase (miscTBD #9 advances 1/60 s per call)
+    // The pace before the saved settings are read, and what --fps= sets. 30 is the default pace
+    // everywhere (platform/settings.h); the game's own timebase is 60 (miscTBD #9 advances
+    // 1/60 s per call), which is what --fps=60 gives.
+    unsigned frames_per_second = 30;
     bool frames_per_second_given = false;  // --fps= was asked for, so it beats the saved rate
     unsigned render_scale = 0;             // 0 = whatever the settings say
     unsigned render_threads = 0;           // 0 = one per core; 1 pins it to the calling thread
@@ -109,6 +116,7 @@ void report_frame_dumps(unsigned frame) {
 
 Options parse_options(int argc, char** argv) {
     Options options;
+    options.program_name = argc > 0 ? argv[0] : "minigolf";
     const std::pair<const char*, std::string*> text_flags[] = {
         {"--gamedir=", &options.game_dir},       {"--script=", &options.script_path},
         {"--call-log=", &options.call_log_path}, {"--install-zip=", &options.install_zip},
@@ -302,14 +310,27 @@ public:
     // oracle uses (tests/diff.sh); nobody should play with it.
     void forget_press_times() { record_press_times_ = false; }
 
-    // Turn the wheel `detents` clicks (negative = the other way). Each detent is queued as its
-    // own sample: the game wants to see the position *change* between polls.
+    // Turn the wheel `detents` clicks (negative = the other way), one sample a click. This is
+    // the script's turn: the recordings it is compared against saw the wheel a click at a time,
+    // one poll each, and the game reads the position *change* between polls.
     void turn(int detents) {
         const int step = detents < 0 ? -1 : 1;
         for (int i = 0; i != detents; i += step) {
             raw_ = wrap_detent(raw_ + step);
             eapp::queue_input(wheel_byte(raw_));
         }
+    }
+
+    // Turn the wheel `detents` clicks as one sample: the player's turn, a frame's worth at a
+    // time. The game polls once a frame, so a click a sample means a key press worth a row is
+    // still turning the wheel eight frames later, and anything faster than a click a frame piles
+    // up behind — the aim went on moving after the key had come up. One sample a frame is what
+    // a real wheel reports, and the game measures the change from the last one, so it sees the
+    // whole turn in the frame it happened and nothing after. Fine for anything short of half a
+    // turn a frame, which is far beyond what a key or a stick can ask for.
+    void turn_at_once(int detents) {
+        raw_ = wrap_detent(raw_ + detents);
+        eapp::queue_input(wheel_byte(raw_));
     }
 
     // Called first thing each frame: last frame's presses are over.
@@ -424,7 +445,7 @@ Action apply_platform_input(const platform::FrameInput& input, ClickWheel& wheel
         }
     }
     if (input.wheel_detents != 0) {
-        wheel.turn(input.wheel_detents);
+        wheel.turn_at_once(input.wheel_detents);
     }
     return {input.quit, input.screenshot};
 }
@@ -521,7 +542,10 @@ int run(Options options) {
     if (options.game_dir.empty()) {
         options.game_dir = gamedata::locate_game(*host, platform::data_directory());
         if (options.game_dir.empty()) {
-            std::fprintf(stderr, "no game files: nothing to run\n");
+            std::fprintf(stderr,
+                         "no game files: nothing to run. To install them without the file "
+                         "browser: %s --install-zip=PATH-TO/8888.zip\n",
+                         options.program_name.c_str());
             return EXIT_FAILURE;
         }
     }
@@ -669,7 +693,7 @@ int run(Options options) {
         // is telling it that it is running — and the buffer is still the magenta that marks an
         // un-drawn region, which the window would otherwise show as the game's opening screen.
         if (gfx::anything_drawn()) {
-    host->present(gfx::screen_pixels(), gfx::screen_width(), gfx::screen_height());
+            host->present(gfx::screen_pixels(), gfx::screen_width(), gfx::screen_height());
         }
         host->wait_for_next_frame();
     }
@@ -680,5 +704,9 @@ int run(Options options) {
 }  // namespace minigolf
 
 int main(int argc, char** argv) {
+    // On Windows this is a windowed program with no console of its own: it joins the terminal
+    // that started it, if there was one, and otherwise says anything fatal in a message box.
+    // Everywhere else, and in the headless build, it does nothing at all.
+    minigolf::platform::windows_console_begin("Mini Golf");
     return minigolf::run(minigolf::parse_options(argc, argv));
 }

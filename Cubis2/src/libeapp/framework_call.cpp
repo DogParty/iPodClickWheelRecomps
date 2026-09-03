@@ -89,7 +89,7 @@ CallLog& call_log() {
 
 }  // namespace cubis::eapp
 
-// The shared rasteriser (`recomps/common/src/ipod/libeapp/gles.cpp`) logs its framework calls
+// The shared rasteriser (`common/src/ipod/libeapp/gles.cpp`) logs its framework calls
 // through `ipod::log_call`. The log is this title's — its ordinals, its recordings — so the
 // shared core only declares the name and this is where it is answered.
 namespace ipod {

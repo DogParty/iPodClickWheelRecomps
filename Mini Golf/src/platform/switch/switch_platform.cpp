@@ -20,6 +20,7 @@
 #include "platform/input_bindings.h"
 #include "platform/paths.h"
 #include "platform/platform.h"
+#include "platform/settings.h"
 #include "platform/switch/switch_audio.h"
 #include "platform/switch/switch_settings.h"
 #include "runtime/runtime.h"
@@ -44,7 +45,8 @@ constexpr unsigned PICTURE_LEFT = (DISPLAY_WIDTH - PICTURE_WIDTH) / 2;
 constexpr unsigned PICTURE_TOP = (DISPLAY_HEIGHT - PICTURE_HEIGHT) / 2;
 
 // The wheel keeps turning while a direction is held: the first repeat waits, the rest follow
-// quickly. A keyboard's own auto-repeat does this on the desktop; a pad has none.
+// quickly. The desktop paces its keys the same way (sdl3_platform.cpp); a pad has no repeat of
+// its own.
 constexpr unsigned REPEAT_DELAY_FRAMES = 20, REPEAT_EVERY_FRAMES = 5;
 
 // One detent short of a menu row is no use to anybody: the wheel moves a row at a time here, as
@@ -199,7 +201,11 @@ public:
         audio_service();
     }
 
-    void present(const uint8_t* rgb) override {
+    // The picture is 320x240 unless a saved render scale says otherwise (there is no way to
+    // set one here, but a settings file carried over from a desktop may hold one), and the
+    // display is 1280x720: the picture goes up by three, in a frame of black bars. A larger
+    // picture is sampled down to the same frame, nearest pixel, rather than refused.
+    void present(const uint8_t* rgb, unsigned width, unsigned height) override {
         if (!framebuffer_open_) {
             open_framebuffer();
         }
@@ -216,6 +222,20 @@ public:
             std::memset(row, 0, PICTURE_LEFT * 4);
             std::memset(row + PICTURE_LEFT + PICTURE_WIDTH, 0,
                         (DISPLAY_WIDTH - PICTURE_LEFT - PICTURE_WIDTH) * 4);
+        }
+        if (width != SCREEN_WIDTH || height != SCREEN_HEIGHT) {
+            for (unsigned y = 0; y < PICTURE_HEIGHT; ++y) {
+                const uint8_t* source = rgb + (y * height / PICTURE_HEIGHT) * width * 3;
+                uint32_t* row = pixels + (PICTURE_TOP + y) * words_per_row + PICTURE_LEFT;
+                for (unsigned x = 0; x < PICTURE_WIDTH; ++x) {
+                    const uint8_t* pixel = source + (x * width / PICTURE_WIDTH) * 3;
+                    row[x] = static_cast<uint32_t>(pixel[0]) |
+                             static_cast<uint32_t>(pixel[1]) << 8 |
+                             static_cast<uint32_t>(pixel[2]) << 16 | 0xff000000u;
+                }
+            }
+            framebufferEnd(&framebuffer_);
+            return;
         }
         for (unsigned y = 0; y < SCREEN_HEIGHT; ++y) {
             const uint8_t* source = rgb + y * SCREEN_WIDTH * 3;
@@ -238,9 +258,12 @@ public:
     }
 
     // The framebuffer is double-buffered against the display, so `framebufferEnd` has already
-    // waited for the next flip: the console paces the game at its own 60 Hz. The frame rate in
-    // Settings ▸ General is not offered here for the same reason.
+    // waited for the next flip: the console paces the game at its display's 60 Hz, or every
+    // second flip for the 30 the settings default to (`apply_swap_interval`). There is no
+    // unlocked rate here, and the controls screen does not offer the frame rate.
     void wait_for_next_frame() override {}
+
+    void apply_settings() override { apply_swap_interval(); }
 
     void play_sound(const std::string& wav_path, bool looping) override {
         audio_play(wav_path, looping);
@@ -335,6 +358,14 @@ private:
                           PIXEL_FORMAT_RGBA_8888, 2);
         framebufferMakeLinear(&framebuffer_);
         framebuffer_open_ = true;
+        apply_swap_interval();
+    }
+
+    // How many display flips a frame waits for: one at 60, two at 30. Anything else the settings
+    // might say — a saved --fps= from a desktop — rounds to whichever is nearer.
+    void apply_swap_interval() {
+        const unsigned rate = settings().frame_rate;
+        nwindowSetSwapInterval(nwindowGetDefault(), rate != 0 && rate <= 45 ? 2 : 1);
     }
 
     void to_console() {

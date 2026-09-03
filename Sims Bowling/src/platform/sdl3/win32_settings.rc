@@ -1,0 +1,3 @@
+// The Windows build's resources: only the manifest, for win32_settings.cpp's controls.
+#include <windows.h>
+1 RT_MANIFEST "win32_settings.manifest"

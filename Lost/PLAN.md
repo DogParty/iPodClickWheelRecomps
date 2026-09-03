@@ -29,7 +29,7 @@ static control-flow walk of the image with the Mini Golf emitter's `recomp.cfg` 
 | | |
 |---|---|
 | image | `Lost_1_1_2917525.bin`, 268 140 bytes, loads flat at `0x18000000`, ends `0x1804176c` |
-| game data | `20 iPod games/Games_RO/1B200/` — 72 files, ~35 MB (`l`, `l1`–`l26`, `d1`–`d15`, `s`, 16 music tracks, 10 sound banks, `rserver.bin`) |
+| game data | `Games_RO/1B200/` — 72 files, ~35 MB (`l`, `l1`–`l26`, `d1`–`d15`, `s`, 16 music tracks, 10 sound banks, `rserver.bin`) |
 | entry vectors | 3: `0x1803d498` start-up, `0x1803d414` terminate, `0x1803d4f4` per-frame |
 | functions | **747** reachable by walking from the vectors; **789** once live coverage and the image's own stored function pointers are added |
 | instructions | **65 423** ARM instructions recompiled |
@@ -112,7 +112,7 @@ kind of thing the quality rules exist to prevent, so the rename is mechanical an
 ## Architecture
 
 ```
-recomps/Lost/
+Lost/
   tools/
     funcs.py             build gen/funcs.json — the function table the emitter works from
     emit.py              ARM → C++ static recompiler (the pure recompilation)
@@ -310,7 +310,7 @@ today.
 
 ## Not today, written down so it is not forgotten
 
-* **Extract the shared core.** `recomps/common/` — runtime, framework, platform, tools — with
+* **Extract the shared core.** `common/` — runtime, framework, platform, tools — with
   Mini Golf and Lost as two thin titles on top. `reference/PORTED.md` is the work list.
 * Music. Lost ships sixteen tracks, and eight of them are `.m4a`. Mini Golf's answer was an
   `afplay` child process, isolated behind `MusicPlayer` and honestly labelled a macOS crutch.
@@ -1356,7 +1356,7 @@ and no worse than 1x, but it would be a silent loss of the feature rather than a
 
 ### 2026-08-27 (a shared core, step one) — the recompiler stops being copied
 
-`recomps/common/` exists, and the first thing in it is the recompiler: `tools/recomp/`, the image
+`common/` exists, and the first thing in it is the recompiler: `tools/recomp/`, the image
 reader, the instruction decoder, the control-flow walk, the C++ writer and the function table.
 Both titles now import it from there. Neither has a copy.
 
@@ -1394,7 +1394,7 @@ intention is that the list keeps shrinking until the script has nothing left to 
 
 ### 2026-08-27 (a shared core, step two) — the first C++ out of the copies
 
-`recomps/common/` now builds a library, `ipod_core`, and both titles link it. Five files went in:
+`common/` now builds a library, `ipod_core`, and both titles link it. Five files went in:
 `platform/save_store.{h,cpp}`, `platform/text_entry.{h,cpp}` and `framework/types.h`. All five
 were byte-identical between the two trees once their namespace names were normalised, and all
 five are self-contained — they include nothing from a title.

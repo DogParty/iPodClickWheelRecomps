@@ -17,11 +17,11 @@ opens with the code-quality rules that bind this project; read them before contr
 ```
 PLAN.md                  the plan of record, with the quality rules and the schedule
 README.md                this file
-CMakeLists.txt           build; targets `minigolf` (SDL3) and `minigolf-headless` (tests)
+CMakeLists.txt           build; targets `minigolf` (SDL3) and `minigolf-headless` (no window)
 tools/
   funcs.py               merge Ghidra + live coverage into gen/funcs.json (the function table)
-  emit.py                ARM → C++ static recompiler — now only for the pure recompilation that
-                         tests/check-recomp.sh builds as the rendering oracle (build/gen-pure/)
+  emit.py                ARM → C++ static recompiler — now only for the pure recompilation
+                         (build/gen-pure/)
   recomp/                the Python package behind those scripts (image, functions, decode, emit)
   DumpFuncs.java         Ghidra headless post-script that produced analysis/ghidra/
 src/
@@ -38,7 +38,7 @@ src/
                          arm_abi.cpp adapts them to the ARM calling convention, and is compiled
                          only for the pure recompilation
   platform/sdl3/         window, audio, keyboard, the macOS menu (desktop)
-  platform/null/         no I/O (headless test runs)
+  platform/null/         no I/O (headless runs)
   game/                  the game, every function decompiled by hand (no generated code)
     game_state.h         names for recovered globals and structures (one place, one name each)
     state.h, guest.h     the game's state blocks as packed C++ structures overlaid on guest
@@ -56,19 +56,10 @@ src/
     host_text.{h,cpp}    labels for the rows this port adds, which no resource pack has a word for
     records.h            the records read from course/hole files and the loader's tables
     calling.h            what is left of the ARM ABI: dispatch-table entries and guest-stack scratch
-tests/
-  scripts/*.script       scripted input (same format as the emulator's `play`)
-  expected/*.calls       framework-call logs recorded from the emulator — the first oracle
-  unit/                  stand-alone unit tests: the CPU helpers, 16.16 fixed point, the ARM C
-                         library, the game's string helpers, the pipeline's matrix helpers, and
-                         this port's cheats and round history
-  diff.sh                runs the headless build on a script and diffs its log with a recording
-  vs-recomp.sh           the second oracle: the same script through the decompiled game and the
-                         pure recompilation, which needs no recording
-analysis/                the reverse-engineering evidence: Ghidra function table and decompilation,
-                         live coverage from play sessions, the feasibility assessment
-reference/               frozen copies of the emulator sources this work was written against
-                         (see reference/MANIFEST.md) — cite these, not the live emulator tree
+analysis/                the reverse-engineering evidence: the function table, live coverage
+                         from play sessions, the feasibility assessment
+reference/               frozen copies of the sources this work was written against
+                         (see reference/MANIFEST.md)
 ```
 
 ## Saved games
@@ -148,9 +139,13 @@ input_bindings.h` holds the table that says which input performs each, the defau
 that one input does exactly one thing, and the file the bindings are saved to. It is portable:
 a binding is a plain `InputCode` that only the platform which produced it interprets.
 
-On macOS, **Settings…** (⌘,) opens a window with three tabs — General, Input and Graphics.
+On macOS, **Settings…** (⌘,) opens a window with three tabs — General, Input and Graphics; on
+Windows, Ctrl+, opens the same three tabs as a Win32 window (`src/platform/sdl3/win32_settings.cpp`).
 General holds the frame rate — 30, 60 or unlocked — and whether the window title shows the rate
-the game is actually running at. Graphics chooses how the picture is enlarged (below). All of them
+the game is actually running at. The default is 30 on every build. The game's own clock advances
+a sixtieth of a second a frame whatever the pace, so 60 is the speed its timers were written for
+and 30 is that at half speed; the Switch, which paces on the display's flip, takes every second
+one for 30. Graphics chooses how the picture is enlarged (below). All of them
 are saved as `settings.txt` in the same store as the saved games and the key bindings, and read
 back at start-up; `--fps=` is a deliberate instruction for one run and outranks the saved rate.
 `src/platform/settings.h` is the portable half — the struct, the file, and the rule that a file
@@ -182,7 +177,16 @@ Menu button now, which is what a player reaches for to back out of a screen.
 
 One press of a scroll key is worth one row: the wheel counts 120 detents to a turn and a menu
 moves a row every eight of them, so a press is worth eight. A press worth a single detent, which
-is what this used to be, meant eight presses a letter.
+is what this used to be, meant eight presses a letter. A scroll key **held** keeps the wheel
+turning, as a thumb resting on it would: the press is a tap and nothing more for a quarter of a
+second, so that a tap stays a tap, and then the wheel turns steadily — at the rate a stick pushed
+all the way over turns it — until the key comes up. The keyboard's own auto-repeat used to stand
+in for this, and it was the reason the aim lagged the keys: a repeat arrived a whole row at a
+time at the system's rate, several times faster than the game polls the wheel, and each detent
+was queued as a sample of its own for the game to read one a frame, so a long hold left a queue
+of turns that kept the aim moving after the key had come up. The hold is paced by the frame now,
+and a frame's worth of live turning reaches the game as one sample, the way a real wheel reports
+its position: the aim moves in the frame the key does, and stops when it does.
 
 ### A gamepad
 
@@ -215,8 +219,7 @@ The window keeps the screen's 4:3 shape however it is dragged, so the picture al
 **-** and **=** step it through whole multiples of 320×240, from 1× to 8×; F or F11 is fullscreen.
 
 Another platform gets rebinding by supplying two things: its own default codes
-(`set_default_bindings`) and a way to ask the player for one. Everything else already works —
-`tests/unit/input_bindings_test.cpp` pins the behaviour a platform's settings UI can rely on.
+(`set_default_bindings`) and a way to ask the player for one. Everything else already works.
 
 ### Typing
 
@@ -229,8 +232,7 @@ platform/text_entry.h` carries that to the game, and `name_entry_typing()` in
 same store, the same length, the same sixteen-character limit, and Return finishing the name as
 the tick glyph does. A character the game has no letter for is ignored, and lower case is folded
 to upper, because the alphabet on the wheel is the authority on what a name may contain. SDL3 is
-the platform that has it so far; the null platform used by the tests does not, which is why the
-oracle sees nothing new.
+the platform that has it so far; the headless null platform does not.
 
 ### Scaling
 
@@ -281,14 +283,19 @@ of the game's audio settings needs the audio to be ours, so it is:
 * **Volume** on the main menu sets the volume of the music and the effects together, as the
   iPod's own volume did — it belonged to the device, not to one part of the game. The level
   reaches the platform through `Platform::set_audio_level` and becomes the gain on every stream.
+* **Options ▸ Brightness is gone.** It set the iPod's backlight, and nothing this port runs on
+  has one it could set, so the row is taken out of the Options menu (`options_enter` in
+  `src/game/menu.cpp`) and the pause menu's Options shows three rows rather than four. The
+  oracles still see the original's menu: `--no-port-additions` and `--emulator-firmware` keep
+  the row, and its page is still in `page.cpp`.
 
-**Known bug:** the Volume and Brightness sliders do not respond to the wheel. Everything under
-them works — a level the game sets is kept, reported back and applied — but the page never sets
-one, because `input_gather` (`src/game/input.cpp`, 0x180082c4) puts a wheel direction into the
-opposite slot from the one the original puts it in, and the sliders read the original's. The pure
-recompilation walks the level from 0 to 40 over forty frames on a scripted turn where this build
-walks it nowhere. Correcting it changes which slot every screen reads from the wheel, so it is
-its own change rather than a line fixed in passing; `src/game/sounds.cpp` carries the detail.
+The Volume and Brightness sliders did not respond to the wheel for a long time, and the note
+here blamed `input_gather` for filing a wheel direction in the wrong slot. It was not that:
+`input_gather` matches the original instruction for instruction, and the two level functions in
+`src/game/sounds.cpp` were reading each direction's step from the *other* direction's slot,
+which is always zero. They read their own now, and `tests/scripts/volume.script` — the first
+script to turn the wheel on the page — is compared against the pure recompilation
+(`recomp_volume`), which agrees on every call and every frame.
 
 `MINIGOLF_TRACE_AUDIO=1` prints what the audio is asked to do — the track opened and its shape,
 the loops, the stops, the volume. Sound that does not come out has no other symptom and nothing
@@ -330,14 +337,13 @@ macOS: reading the pad is one call and cannot be intercepted by anything.
 no decoder for them that is ours to use. There is no software keyboard, so a name is spelled out
 on the wheel as it was on the iPod. Sound effects do play — `src/platform/switch/switch_audio.cpp`
 is a small mixer over libnx's `audout`, since the console gives homebrew one PCM stream and no
-mixer of its own. The .wav decoding it needs is portable and lives in `src/platform/wav.cpp`, so
-it can be tested here (`tests/unit/wav_test.cpp`) rather than only on the console.
+mixer of its own. The .wav decoding it needs is portable and lives in `src/platform/wav.cpp`.
 
-**It has never been run.** There is no Switch on this machine and no emulator worth trusting for
-it, so what is claimed here is what can be shown: it cross-compiles clean with warnings as errors,
-it links against libnx, the `.nro` is well formed (icon and title checked by reading the file
-back), and the parts that are plain logic — the memory model and the .wav decoder — pass the
-oracle and the unit tests on the desktop. The rest is code review.
+**It has never been run.** There is no Switch to hand, so what is claimed here is what can be
+shown: it cross-compiles clean with warnings as errors, it links against libnx, the `.nro` is
+well formed (icon and title checked by reading the file back), and the parts that are plain
+logic — the memory model and the .wav decoder — are shared with the desktop build. The rest is
+code review.
 
 If the first run on real hardware goes wrong, this is where to look:
 
@@ -348,7 +354,7 @@ If the first run on real hardware goes wrong, this is where to look:
 | It closes straight back to the menu | The console was never reached — likely the loader, not this |
 | Black screen, no sound | `present()` in switch_platform.cpp: the blit, or the framebuffer's format |
 | The picture, but nothing responds | `poll()`: the pad, or the bindings file on the SD card |
-| The picture and no sound | switch_audio.cpp: audout opened, or the .wav decoding (tested here) |
+| The picture and no sound | switch_audio.cpp: audout opened, or the .wav decoding |
 | Out of memory at start-up | Launch it from a game (hold R) rather than the album: applet mode's heap is small |
 
 The music is the one thing that would need a new dependency rather than a fix: devkitPro's portlibs
@@ -366,8 +372,47 @@ and lets the pages arrive as they are touched; a console has neither the address
 the paging to make it cheap, so it allocates the four regions the guest actually uses (about 28 MB
 in total, measured against the longest recorded session and then given room). Both models are in
 `src/runtime/memory.cpp`, and `cmake -DMINIGOLF_REGION_MEMORY=ON` builds the console's on a
-desktop — which is how it was tested, since the oracle cannot be run on the console: all six cases
-are identical under it.
+desktop.
+
+## Windows
+
+There is a 64-bit Windows build — `minigolf.exe`, the same SDL3 program as the macOS one.
+
+    tools/windows-build.sh
+
+The toolchain is MinGW-w64. It is not installed on this machine and does not need to be: the
+script builds an Ubuntu image with the cross-compiler, its zlib and SDL3's own mingw development
+package, and runs the whole build in it against this working tree, so Docker is the only
+requirement — exactly as for the Switch. The script is a wrapper around
+`../common/tools/windows-build.sh`, which every title shares; the toolchain file beside it is
+`mingw-w64.cmake`, and it
+serves as well on any machine with the `x86_64-w64-mingw32` toolchain on its path; on Windows
+itself `CMakeLists.txt` also spells every option the MSVC way, so `cmake -B build` there is the
+other route. The result is `build-windows/dist/`: `minigolf.exe` beside the `SDL3.dll` it loads.
+Nothing else is needed — the C++ runtime is linked in.
+
+To run it, copy that folder to a Windows machine and start the .exe. On first launch it asks for
+the game's zip with the native file browser, as on macOS, and puts the files in
+`%APPDATA%\iPod Mini Golf\88888` beside the saves and settings (see "The game's files"). There is no console
+window: the game is one window and nothing else. Started from a terminal it joins that terminal
+and prints there as it always did, and anything fatal with no terminal to print to is a message
+box, so a program that cannot start still says why
+(`common/src/ipod/platform/windows_console.h`). The headless build is deliberately still
+a console program, since its output is the whole point of it.
+
+**Settings.** Ctrl+, opens the settings window — the same three tabs as the Mac's, General,
+Input and Graphics, as a Win32 window of the game's own (`src/platform/sdl3/win32_settings.cpp`),
+owned by the game's window so it stays in front of it. Tab moves between the controls and Escape
+closes it. The two windows share everything but the widgets: the actions, the keys on offer, the
+saved files and the hooks into the host are the portable code behind both, so a change in one is
+a change in the other. Its controls take the modern look from the manifest in
+`src/platform/sdl3/win32_settings.manifest`, which the build embeds.
+
+**Music** plays, through Media Foundation: the tracks are AAC, which SDL does not decode, and
+the decoder behind `src/platform/sdl3/music_decoder.h` is AudioToolbox on macOS and a Media
+Foundation source reader on Windows — each the system's own, so there is nothing to ship. A
+Windows "N" edition without the Media Feature Pack has no AAC decoder; the program says so once
+on the console and plays on without music, as every other platform still does.
 
 ## Portability
 
@@ -375,8 +420,8 @@ The project targets Apple clang, MSVC, MinGW and the NDK, and one day a console 
 Everything host-specific is either in `src/platform/` or behind a capability check with a
 documented fallback: the guest address space (`reserve_span` in `src/runtime/memory.cpp`, three
 implementations), backtraces on a watch hit, `localtime_r`, and the music decoder
-(`src/platform/sdl3/music_decoder.h`), which is AudioToolbox on macOS and degrades to silence
-with one warning where there is none yet. `CMakeLists.txt` carries an
+(`src/platform/sdl3/music_decoder.h`), which is AudioToolbox on macOS, Media Foundation on
+Windows, and degrades to silence with one warning where there is none yet. `CMakeLists.txt` carries an
 MSVC spelling of every compiler option.
 
 Two things a port must know. The game's structure overlays read guest words directly, so the
@@ -384,6 +429,44 @@ host must be little-endian — `src/game/guest.h` asserts it and says what a big
 have to change. And the guest address space is one ~790 MB reservation, committed lazily; a
 target with neither demand paging nor that much memory needs `guest_pointer` to map pages on
 first use instead, which is the note left at `reserve_span`.
+
+## Licence
+
+GPL-3.0-or-later, like the rest of the ports; the tools in `../common/tools/` are MIT. See
+`../LICENSING.md` for the split and for what a licence here does not cover — the game itself is
+not ours to license, and no part of it is in this repository or in any release.
+
+## Releases
+
+**The game's folder is `88888`.** That is the folder from the iPod that a player has to
+supply; no artifact contains it, and nothing runs without it. Each built artifact carries a
+readme that says so, names that folder, and gives the place it ends up
+(`%APPDATA%\iPod Mini Golf\88888` on Windows, `~/Library/Application Support/iPod Mini Golf/88888`
+on macOS).
+
+    ../common/tools/release.sh <version> Mini Golf
+
+builds every artifact this machine can and lays them out under `release/<version>/` with a
+`SHA256SUMS` beside them:
+
+    minigolf-<version>-macos.zip         "Mini Golf.app", universal, macOS 11 and later
+    minigolf-<version>-windows-x64.zip   the .exe and SDL3.dll
+    minigolf-<version>-switch.zip        the .nro, for the Homebrew Menu
+
+The same script is what continuous integration runs (`.github/workflows/release.yml`), so a tag
+and a laptop build the same thing. Run it with no title named and it does every title in the
+tree. It signs nothing: an unsigned .app is quarantined by macOS the first time it is opened
+from a download, and each artifact's readme says how to open it anyway (right-click ▸ Open, or
+`xattr -dr com.apple.quarantine`). Signing needs a paid Apple developer account and is a
+decision for whoever publishes.
+
+The macOS artifact is built against SDL's own release framework rather than this machine's SDL,
+which is what makes it universal and lets it run on macOS 11: a Homebrew SDL is built for the
+machine it was installed on and would pin the app to that architecture and that macOS version.
+
+The console build cannot ask for the game's files — it has no file browser — so on that one
+they have to be at `sdmc:/switch/minigolf/88888/` before it starts. Each artifact's readme says
+so in its own words.
 
 ## Building
 
@@ -393,8 +476,19 @@ where the tools expect it).
 
 ```sh
 cmake -B build && cmake --build build
-./build/minigolf
+./build/minigolf          # on macOS: ./build/minigolf.app/Contents/MacOS/minigolf
 ```
+
+The windowed build is a bundle on macOS, so it lands at `build/minigolf.app/Contents/MacOS/minigolf`
+rather than `build/minigolf`; the headless build is a plain executable as before.
+
+**This one needs no generator step.** `src/game/` is the whole game by hand, so `gen/` holds
+only a function table and nothing generated is compiled into the build. The recompiler is still
+used, but as the test oracle: `tests/check-recomp.sh` translates every function in the game's
+binary, builds that as a second headless program, and compares it against this one call by call.
+That needs your copy of the game the same way the tests do, and writes to `build/gen-pure`
+rather than to `gen/`.
+
 
 The default build is **Release**: `-O3 -g`, with its symbols and its assertions kept. That matters
 more here than in most projects, because the renderer is a software rasteriser and the optimiser's
@@ -411,13 +505,12 @@ transform has been through. A 1:1 sprite blit gains nothing and must gain nothin
 recognised as 1:1 in the game's own pixels and still sampled nearest, so the art enlarges as the
 same hard blocks. The frame is drawn on every core, in horizontal stripes, which is bit-for-bit
 what one thread would have drawn — `--render-threads=1` pins it for measuring. On an M1 Max, over
-3 000 frames of `hole.script`: 2.41 ms a frame at 1×, 1.87 at 2× (four times the pixels, but past
+3 000 frames of one hole: 2.41 ms a frame at 1×, 1.87 at 2× (four times the pixels, but past
 the point where the work is shared out), 5.88 at 4×, 25.39 at 8×.
 
-The main build contains no generated code. `tools/funcs.py` and `tools/emit.py` are still used
-by `tests/check-recomp.sh`, which emits the whole game with no hand-decompiled replacements into
-`build/gen-pure/` and builds `build-recomp/` from it — the pure recompilation that the exact
-call-log oracle and the vertex/framebuffer comparisons run against.
+The main build contains no generated code. `tools/funcs.py` and `tools/emit.py` can still emit
+the whole game with no hand-decompiled replacements into `build/gen-pure/` — the pure
+recompilation, the original code translated instruction by instruction.
 
 ## The game's files
 
@@ -439,132 +532,22 @@ game's saves, settings and, later, mods live:
 `MINIGOLF_DATA_DIR` overrides the location. The installed files are verified on every launch
 (the saves the game writes there are ignored); if any has gone missing or changed, the file
 browser comes back. `./build/minigolf --install-zip=8888.zip` installs without the dialog,
-which is what the headless build needs, and `--gamedir=DIR` bypasses all of this and runs
-straight from a directory, as the tests do.
+and `--gamedir=DIR` bypasses all of this and runs straight from a directory.
 
 `cmake -B build -DMINIGOLF_SANITIZE=ON` builds with ASan/UBSan. `cmake --build build --target
 format` runs clang-format over the hand-written sources.
 
-## Testing
-
-```sh
-ctest --test-dir build          # unit tests, both oracles, and the regression scripts
-tests/diff.sh name-entry build/minigolf-headless   # one recorded case, verbose
-tests/vs-recomp.sh pages        # one case against the pure recompilation instead
-```
-
-Every case runs against its own copy of the game's folder, so a run's saved games cannot change
-what the next one does and the folder you point `GAME_DIR` at is never written to. That is a few
-dozen copies of 47 MB inside `build/` once everything has run; `rm -rf build/game-*` takes them
-back whenever the disk matters.
-
-There are two oracles and, beside them, five tests that check an outcome rather than a comparison
-(`tests/pause-menu.sh`, `page-back.sh`, `return-to-menu.sh`, `exit.sh`, `cheats.sh`). Those exist
-because a
-comparison can agree and still be wrong: the pause menu once froze the game, and both the recording
-and the pure recompilation froze with it, since the fault was in this program's firmware side
-rather than in the game. A test that says "the picture must still be changing" or "this row must
-end the program" catches what neither oracle can.
-
-`cheats.sh` is there for the opposite reason: the Cheats screen is this port's own, and both
-oracles are deliberately told not to see it. Anything this port adds to the picture — the Cheats
-row on Options, the extra lines on the Statistics page — is a real difference from what the
-oracles compare against, since one compares with logs recorded from the emulator and the other
-with the pure recompilation of the original code. Rather than teach either to overlook it, one
-switch takes the additions away for the comparison: `--emulator-firmware` sets it, and
-`--no-port-additions` is what `vs-recomp.sh` gives the decompiled side so both builds are drawing
-the same game (`src/game/host_text.h`). So the feature needs a test that looks at it directly,
-and `cheats.sh` is that — the screen opened, two cheats turned on, Menu pressed to leave, and the
-file it wrote read back and checked.
-
-There are two oracles. `tests/diff.sh` compares a run against a log recorded from the emulator —
-a witness built by something other than this project, which is why those six cases are the
-stronger ones. `tests/vs-recomp.sh` compares the decompiled game against the pure recompilation
-(`build-recomp/`, built by `tests/check-recomp.sh`), which is the original code translated
-instruction by instruction: it tests the same thing and needs no recording, so a new case is a
-script and nothing else. Every script in `tests/scripts/` without a recording becomes one of
-those tests.
-
-What the tests reach, measured with a coverage build over every case: 72% of the lines in
-`src/game/` and 86% of its functions. It was 66% and 78% when the six recorded cases were all
-there was; the cases the second oracle made possible closed two of the three holes —
-`page.cpp` went from 2.6% of lines to 77% and `pause_menu.cpp` from 17% to 61%. `hole_tick.cpp` — the hole's own state machine — went 45% → 61% with the `strokes` case, which
-putts badly fourteen times and is moved on by the stroke limit. What no case reaches is the ball
-actually going in: sinking it needs an aim that cannot be worked out from here, so `tick_holed`
-and `tick_sinking` are the largest thing still untested.
-
-`ctest` runs two kinds of test. The unit tests in `tests/unit/` are stand-alone programs over
-the pieces that can be exercised on their own: the ARM arithmetic helpers, 16.16 fixed point,
-the ARM C library, the game's string helpers, and the matrix helpers every drawn vertex goes
-through. They need no game data, so they run anywhere and fail fast.
-
-The rest are oracle cases. An oracle case is a script of input events plus the log of framework
-calls the emulator made while running it; the game passes when it makes the identical sequence
-of calls with identical arguments. Two tiers:
-
-* `tests/diff.sh <case>` — *semantic*: each call's ordinal, its real arguments (arity from
-  `src/libeapp/imports.json`) and frame. This is the test for the decompiled game.
-* `tests/check-recomp.sh` — *exact*: rebuilds the pure recompilation (no hand-written
-  replacements) and compares every logged register and stack word, leftovers included. This is
-  the regression test for the emitter and runtime. Five of the six cases are identical;
-  `next-hole` differs on 20 lines out of 2 871 115, all inside one frame and all in the two
-  stack words past what those ordinals take — stale data below the stack pointer, which no call
-  reads. Every register argument matches.
-
-`python3 tools/progress.py` reports how much of the game is still recompiled.
-
-### The oracle emulator
-
-The recordings in `tests/expected/` come from `tools/oracle-emulator/`, a pinned copy of the
-emulator as it was when this recomp was written (`reference/MANIFEST.md`) with three
-instruments added: `--call-log=FILE` (the framework-call log), `--enter-log=FILE` with
-`--watch-pc=ADDR,…` (function-entry traces in the same format as the recomp's
-`--trace-entry`), and `--time=HH:MM`. The live emulator keeps changing under other people's
-work, so recordings are never made with it. A scripted run takes no live window input.
-
-```sh
-cargo build --release --manifest-path tools/oracle-emulator/Cargo.toml --target-dir build/oracle-emulator
-build/oracle-emulator/release/play "$GAME_DIR/Executables/Minigolf_1_1_2563296.bin" --gamedir="$GAME_DIR" \
-    --async-files --allow-creates --fixed-clock --fps=0 --time=07:53 --battery=100 \
-    --script=tests/scripts/<case>.script --call-log=tests/expected/<case>.calls
-```
-
-Delete any `*.sav` the game wrote into `$GAME_DIR` before recording (a save changes start-up),
-and record with `--battery=100` and `--time=07:53`: the game shows both, and they are what
-`libeapp` reports.
-
-### The draw oracle
-
-The call log cannot see what a draw call drew — vertices go to memory, not through the interface
-one by one — so a render routine that draws the right things in the wrong place still passes
-`diff.sh`. The second channel closes that gap: `MINIGOLF_VERTEX_HASH=1` makes the headless build
-print one line per draw with a hash of the vertices it read, and the pure recompilation
-(`build-recomp/minigolf-headless`, built by `check-recomp.sh`) prints the same for the same
-script. The two streams must be identical:
-
-```sh
-MINIGOLF_VERTEX_HASH=1 build/minigolf-headless "$IMAGE" --gamedir=DIR --script=S --frames=N \
-    2>&1 >/dev/null | grep '^draw' > new.txt
-# ... the same against build-recomp/minigolf-headless, then:
-diff reference.txt new.txt
-```
-
-The current reference streams are 59 094 draws for the course carousel and 131 021 for
-`next-hole`; both are compared on every change that touches rendering, geometry or the fixed-point
-helpers. When they differ, `MINIGOLF_VERTEX_DUMP=<n>` prints every vertex of draw *n* from both
-builds, which says whether the geometry moved or the texture coordinates did.
-
 ## Working on the game code
 
-Every function is decompiled; the remaining shape of the code comes from what the oracle needs:
+Every function is decompiled; the remaining shape of the code comes from the machine underneath:
 
 * Asking the platform for something is an ordinary C++ call into `src/framework/`:
   `gfx::draw_arrays(gfx::Primitive::Quads, 0, count)`, `audio::play_sound(sound)`,
   `storage::perform(request)`, `device::battery_level()`. Values that name a thing the hardware
   enumerated are `enum class`, so a texture target cannot be passed as a primitive. Game
   functions take and return ordinary values; a `Cpu&` appears only in the ARM-ABI shims
-  (`f_XXXXXXXX`) and `dispatch.cpp`, where the ABI is the point. The call log (the oracle) compares the ordinal and those arguments;
-  it no longer compares the original's return address, so nothing carries one around.
+  (`f_XXXXXXXX`) and `dispatch.cpp`, where the ABI is the point. Nothing carries the original's
+  return addresses around.
 * Locals a framework reads or writes (an out-parameter, a string for the text renderer) are
   reserved on the guest stack with `GuestScratch` and addressed with `frame.at(offset)`; those
   are the only stack frames left.
@@ -577,12 +560,12 @@ Every function is decompiled; the remaining shape of the code comes from what th
   raw 32-bit multiply silently loses.
 * Game state is reached through the structures in `state.h`. Most of them overlay the guest
   address space, and that is not laziness: the frameworks are handed those addresses (the text
-  block alone accounts for 204 815 pointer arguments in the oracle logs), the file framework
+  block alone is handed out hundreds of thousands of times a session), the file framework
   reads and writes the settings block, and `INPUT_STATE` is initialised data that comes out of
   the player's own copy of the game. What nothing outside reads has moved to the host: the
   random generator, the tracked-allocation registry, the sound slots, the wheel/button slots,
-  and the menu item tables. Before moving a block, check it: no address inside it may appear as
-  an argument in `tests/expected/*.calls`.
+  and the menu item tables. Before moving a block, check it: no address inside it may ever be
+  handed to a framework.
 * Records read out of course and hole files, and the tables the loader builds, are the
   structures in `records.h`. The only raw `ld`/`st` left are the string and C-library
   primitives (`strings.cpp`, `libc.cpp`), which are the memory primitives themselves.
@@ -591,27 +574,19 @@ Every function is decompiled; the remaining shape of the code comes from what th
   three entry vectors and the completions the framework itself dispatches (`src/libeapp/
   async_file.cpp` reads five of them out of the guest request record at +0x34). A new one needs
   an entry there — `call_indirect` is fatal on an unknown address.
-* `ctest` must stay green. If the semantic oracle diverges, the first differing call tells you
-  where; for rendering, compare `MINIGOLF_VERTEX_HASH=1` output with `build-recomp/` (see
-  "Debugging aids"). Stack-range pointer arguments compare as `stack` in the semantic oracle.
 
 ## Debugging aids
 
 * `--trace-entry=ADDR[,ADDR]` prints the registers every time a recompiled function at that
-  address is entered; the emulator's `play --watch-pc=ADDR` prints the same view, so the two
-  runs can be compared at any chosen point.
+  address is entered.
 * `--call-log=-` streams the framework-call log to stdout.
 * The `shot` script action (or P in the window) writes `build/shot-NN.ppm` and prints a hash;
-  `tools/ppm2png.py` converts to PNG and hashes the emulator's PNGs the same way.
+  `tools/ppm2png.py` converts to PNG.
 
 ## Status
 
-Every one of the game's 333 functions is hand-decompiled, and the headless build makes the
-identical sequence of framework calls the emulator makes on all six recorded cases — `boot`
-(35 694 calls), `name-entry` (406 585), `menus` (567 734), `options` (1 035 427), `hole`
-(1 629 283) and `next-hole` (2 871 115) — while drawing the identical vertices (59 094 and
-131 021 draws compared against the pure recompilation). `ctest` is 11 for 11, and the SDL3 build
-runs the game in a window.
+Every one of the game's 333 functions is hand-decompiled, and the SDL3 build runs the game in a
+window.
 
 What the code looks like now: the platform is reached through plain C++ interfaces with
 `enum class` arguments, not framework ordinals; no game function takes a `Cpu&`; records are
@@ -622,6 +597,4 @@ three courses, the eighteen holes, the game modes — is named once, in `game_st
 What is left of the machine underneath is deliberate and documented: the game's state still lives
 in guest memory because the frameworks are handed pointers into it, fourteen dispatch entries are
 still addresses because the framework dispatches them by address, and 23 ARM-ABI shims stand
-where those two meet. `PLAN.md` records the schedule, the progress log and the open questions —
-the largest being that the oracle cannot currently be extended, because the emulator in
-`tools/oracle-emulator` no longer reproduces the logs in `tests/expected/`.
+where those two meet. `PLAN.md` records the schedule, the progress log and the open questions.

@@ -1,4 +1,4 @@
-// Cocoa side of macos_settings.h.
+// Cocoa side of settings_window.h.
 //
 // Four tabs. General holds the frame rate and the title-bar readout; Input is a column of rows,
 // one per action, each with a pop-up menu of the keys this platform is willing to assign
@@ -10,7 +10,7 @@
 // chain — which does not deliver keys to a button unless Full Keyboard Access is on — or an event
 // monitor that has to be right about every case. A pop-up needs none of that and cannot fail
 // quietly.
-#include "platform/sdl3/macos_settings.h"
+#include "platform/sdl3/settings_window.h"
 
 #include "platform/input_bindings.h"
 #include "platform/settings.h"
@@ -363,13 +363,13 @@ CGFloat input_pane_height() {
 // Show what each action is bound to now, and what every setting now *is*.
 //
 // The values come from `settings()` rather than from the hooks, and that is a fix rather than a
-// preference. `macos_settings_install` is called from the platform's constructor, which runs
+// preference. `settings_window_install` is called from the platform's constructor, which runs
 // before the saved settings have been read — `create_platform` is the first thing the frame pump
 // does and `load_settings` is sixty lines later — so the copy in the hooks is a snapshot of the
 // *defaults*, taken before the player's file was opened. The window showed those defaults every
 // time it was opened, whatever the game was actually doing. The frame rate escaped it only
 // because `apply_settings` pushes that one value back through
-// `macos_settings_set_frame_rate` afterwards; nothing else had such a path.
+// `settings_window_set_frame_rate` afterwards; nothing else had such a path.
 //
 // A binding this platform does not offer in its list still shows, as an extra item, so opening
 // the window cannot silently discard it.
@@ -456,7 +456,7 @@ CGFloat input_pane_height() {
         return;
     }
     // The host owns the setting: ask it to change, and it reports back through
-    // macos_settings_set_frame_rate, which is also what the L key goes through.
+    // settings_window_set_frame_rate, which is also what the L key goes through.
     if (self.hooks.on_frame_rate_chosen != nullptr) {
         self.hooks.on_frame_rate_chosen(self.hooks.context, rate_choices[selected]);
     } else {
@@ -582,7 +582,7 @@ CGFloat input_pane_height() {
 @implementation MinigolfSettingsMenuTarget
 - (void)openSettings:(id)sender {
     (void)sender;
-    lost::platform::macos_settings_open();
+    lost::platform::settings_window_open();
 }
 @end
 
@@ -593,7 +593,7 @@ MinigolfSettingsMenuTarget* menu_target = nil;
 SettingsHooks installed_hooks;
 }  // namespace
 
-void macos_settings_install(const SettingsHooks& hooks) {
+void settings_window_install(const SettingsHooks& hooks) {
     @autoreleasepool {
         installed_hooks = hooks;
 
@@ -619,7 +619,7 @@ void macos_settings_install(const SettingsHooks& hooks) {
     }
 }
 
-void macos_settings_open() {
+void settings_window_open() {
     @autoreleasepool {
         if (settings_window == nil) {
             settings_window = [[MinigolfSettingsWindow alloc] init];
@@ -632,7 +632,7 @@ void macos_settings_open() {
     }
 }
 
-void macos_settings_set_frame_rate(unsigned frames_per_second) {
+void settings_window_set_frame_rate(unsigned frames_per_second) {
     installed_hooks.frame_rate = frames_per_second;
     if (settings_window != nil) {
         [settings_window showFrameRate:frames_per_second];

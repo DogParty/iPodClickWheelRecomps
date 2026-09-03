@@ -1,7 +1,7 @@
 # The shared core
 
-Code that belongs to no single title, used by every recomp under `recomps/` by being **compiled
-and imported from here** rather than copied into each tree.
+Code that belongs to no single title, used by every title here by being **compiled and
+imported from here** rather than copied into each tree.
 
 That is the whole point of this directory, and it exists because the copies rotted. Until now a
 title started as a copy of the one before it, recorded in its `reference/PORTED.md` with the
@@ -14,13 +14,13 @@ had the same history. Nobody was at fault. Copies simply do not carry a fix forw
 in the process was ever going to notice.
 
 **Starting a new title?** `../NEW-RECOMP.md` is the playbook: the plan the four titles were
-made with, genericised, from the measurements to the last green test.
+made with, genericised.
 
 ## What is here, and what is not
 
 A title keeps everything that is *about that title*: its `src/game/`, its `gen/`, its `analysis/`,
-its recorded oracles under `tests/expected/`, its `imports.json` and the ordinal table that goes
-with it, and every constant measured from its own binary.
+its `imports.json` and the ordinal table that goes with it, and every constant measured from its
+own binary.
 
 What comes here is what turned out to be the same file twice. That was measured rather than
 assumed — the two trees were compared after normalising their namespace and macro names, and the
@@ -44,7 +44,7 @@ it (its PLAN.md, block 0b): `runtime/cpu.h` (Lost's, the superset that models th
 `mrs`/`msr`), `runtime/runtime.{h,cpp}`, `libeapp/heap.{h,cpp}` and `gamedata/zip.{h,cpp}`. Each
 left a forwarding header in all three trees; `runtime.h` keeps one thing per title — the
 declaration of `game::call_indirect`, which each title's dispatch table defines. Mini Golf and
-Lost were rebuilt and their suites run against the result (30/30 and 17/17).
+Lost were rebuilt against the result.
 
 One thing was tried and undone the same hour, and the reason is worth keeping. The four
 framework headers `controls.h`, `device.h`, `storage.h` and `audio.h` are identical across the
@@ -59,26 +59,17 @@ title's: `disable` (#35), `gen_textures` (#45 — names from 1, as the driver's 
 vector form of the constant colour (#148, `set_constant_color_vector`), the `mat4` helpers
 `matrix_translate` (#169), `matrix_scale` (#171) and `matrix_rotate` (#173), and
 `texture_sub_image` (#105, decoded through the whole-texture upload into a scratch name and
-blitted, as the emulator does). Each is what the emulator's stub does (`reference/eapp-loader/
-lib.rs`, `GlGenTextures`, `GlUniform4x`, `GlMatrixOp`, `upload_sub`). Two of them — `#171` and
-`#105` — were found by the *picture* oracle: an ordinal a title calls and nobody implements
-still logs its call, so the call-log oracle passes it by construction. The check that catches
-it is `python3 -c` over a recording against `imports.json` for reached-but-unnamed ordinals;
-Hold'em's `analysis/ordinals.txt` is that list for its recordings.
-
-One rendering rule moved under `--emulator-graphics` with it: the box filter for minified
-textures (`MINIFIED_RATIO`) is a deliberate improvement on the emulator's nearest sampling, and
-the picture oracle — which runs with that flag precisely to draw as the emulator does — now gets
-nearest sampling too. Hold'em draws its card backs at half size; the filter alone moved 2.5% of
-that frame, all of it on the cards' edges.
+blitted). Two of them — `#171` and `#105` — were found by comparing *pictures*: an ordinal a
+title calls and nobody implements still logs its call, so a call log alone passes it by
+construction. The check that catches it is a scan of a call recording against `imports.json`
+for reached-but-unnamed ordinals; Hold'em's `analysis/ordinals.txt` is that list.
 
 ### The fourth title (2026-08-27/28)
 
 The Sims Bowling started, like Hold'em, with this directory in place, and its plan made a rule
 of what the third title had done by instinct: **a shared-core change is verified in every title
-before it is used** — Mini Golf's `tests/check-recomp.sh` still byte-identical, Lost's and
-Hold'em's `gen/` re-emitted byte-identical and their suites green. Four changes went in under
-that rule:
+before it is used** — the other titles' `gen/` re-emitted byte-identical. Four changes went in
+under that rule:
 
 * **`tools/recomp/cfg.py`, two idioms.** armcc's 64-bit divide steps into an unrolled loop with
   `add pc, pc, rN, lsl #2` bounded by an `and rN, rM, #7` rather than a `cmp`/`addls` guard, and
@@ -105,9 +96,7 @@ that rule:
 * **`libeapp/gles.cpp`: `glDrawElements` (#38).** Four of the five draws in a Sims Bowling menu
   frame are indexed and no title had implemented the ordinal. The rasteriser's vertex fetch is
   now `rasterise_indexed(mode, indices)`; `draw_arrays` names `first .. first+count` and
-  `draw_elements` reads a byte, short or int index array (shorts for an unknown type, as the
-  emulator's `draw_elements` reads it). The picture oracle at the menu is pixel-identical to
-  the emulator's, which is the only oracle an ordinal nobody else calls has.
+  `draw_elements` reads a byte, short or int index array (shorts for an unknown type).
 
 ### A recompiler fix, from the third title (2026-08-27)
 
@@ -119,8 +108,7 @@ compiler put the `add lr, pc, #0xc` four instructions before its `bx r2` (`0x180
 was never emitted; the function returned with 24 bytes still on the stack and the game read
 address 9 as a pointer seven frames later. `LINK_SETUP_WINDOW` is 8 now and the scan stops at
 an intervening `bl`. Re-emitting Lost with the wider window added the same kind of dropped
-continuation to two of its functions; its oracles had never reached those paths. All three
-titles' oracles are green on the new emitter.
+continuation to two of its functions, on paths nothing had reached.
 
 ## How a title reaches it
 
@@ -176,9 +164,8 @@ function Mini Golf's had and twenty it did not, and Mini Golf's had none of its 
 the one that moved, and Mini Golf's was deleted.
 
 Sharing it found **two places where the two games drive the driver differently**, and both were
-missed by every call-log oracle in either project, because a call log records a buffer's address
-and never its contents. They were found by rendering the same scripts through both and comparing
-the pictures.
+invisible to a call log, because a call log records a buffer's address and never its contents.
+They were found by rendering the same runs through both and comparing the pictures.
 
 * **How a draw's attributes are recognised.** A game that re-points every attribute before every
   draw has told the driver which attributes that draw reads; the enable flags say only that
@@ -215,9 +202,6 @@ spelling. IOKit's power-source API on macOS (the only framework link in `ipod_co
 where the host has none — a desktop is a device that is always on the charger, and 0 would put
 every game into its low-battery behaviour.
 
-Each title keeps `set_emulator_device`, which puts the emulator's wrong answers back for
-`--emulator-firmware`: every recording in every `tests/expected/` was made against them.
-
 ### The glyph reconstruction, and a model that fits fewer fonts than it assumed (2026-08-29)
 
 `Filter::Glyph` takes a run of text's filtered coverage back to full contrast, so that a glyph
@@ -251,7 +235,7 @@ feeding an SDL audio stream like the sound effects. Lost was still spawning `afp
 source carried a TODO asking for exactly this.
 
 `ipod/platform/sdl3/music_decoder.{h,cpp}` is that decoder, and both titles now use it. It is not
-in `ipod_core`: a title finds SDL *after* it adds this directory, and the headless oracle build has
+in `ipod_core`: a title finds SDL *after* it adds this directory, and the headless build has
 no SDL at all, so the file is published as `IPOD_CORE_SDL3_SOURCES` and each title compiles it into
 its own window build. Lost gained volume control and a real stop along with it.
 

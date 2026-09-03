@@ -23,8 +23,8 @@ the live tree if the two disagree.
 
 | what | taken from | at |
 |---|---|---|
-| `tools/oracle-emulator/src/` | `ipod-emulator/tools/eapp-loader/src/` | commit `96bfe90`, 2026-08-28, **plus one instrument** (below), uncommitted in the live tree at the time of the pin |
-| `tools/oracle-emulator/arm7tdmi/` | `ipod-emulator/tools/arm7tdmi/` | commit `96bfe90` |
+| `tools/oracle-emulator/src/` | `<upstream>/tools/eapp-loader/src/` | commit `96bfe90`, 2026-08-28, **plus one instrument** (below), uncommitted in the live tree at the time of the pin |
+| `tools/oracle-emulator/arm7tdmi/` | `<upstream>/tools/arm7tdmi/` | commit `96bfe90` |
 | `tools/oracle-emulator/Cargo.toml`, `Cargo.lock` | the Sims Bowling recomp's (itself Hold'em's, itself Lost's), unchanged | — |
 | `tools/oracle-emulator/arm7tdmi/Cargo.toml` | the emulator's, with `version.workspace = true` replaced by `version = "0.1.0"` — there is no workspace above the pinned copy to inherit from | commit `96bfe90` |
 

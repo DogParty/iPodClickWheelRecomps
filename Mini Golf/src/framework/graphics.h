@@ -2,7 +2,7 @@
 // namespace.
 //
 // The iPod's GL ES driver was one piece of firmware and every title called the same one,
-// so there is one reimplementation of it: `recomps/common/src/ipod/libeapp/gles.cpp`.
+// so there is one reimplementation of it: `common/src/ipod/libeapp/gles.cpp`.
 // A title that never makes a given call simply never reaches that entry point.
 //
 // See ../../../common/README.md.

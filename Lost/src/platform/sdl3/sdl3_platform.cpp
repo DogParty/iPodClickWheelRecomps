@@ -16,8 +16,8 @@
 //
 #include "platform/input_bindings.h"
 #include "platform/platform.h"
-#include "platform/sdl3/macos_settings.h"
 #include "platform/sdl3/music_decoder.h"
+#include "platform/sdl3/settings_window.h"
 
 #include <SDL3/SDL.h>
 
@@ -31,7 +31,6 @@
 #include <utility>
 #include <vector>
 
-
 namespace lost::platform {
 
 namespace {
@@ -41,6 +40,14 @@ constexpr int WINDOW_SCALE = 3;
 // scripts turn it in eights for exactly this reason), so a key press is worth a row. One detent a
 // press meant eight presses per letter.
 constexpr int DETENTS_PER_ROW = 8;
+
+// The modifier that, with comma, opens the settings window: the Command key on a Mac, where
+// ⌘, is what every application uses, and Control elsewhere.
+#if defined(__APPLE__)
+constexpr SDL_Keymod SETTINGS_MODIFIER = SDL_KMOD_GUI;
+#else
+constexpr SDL_Keymod SETTINGS_MODIFIER = SDL_KMOD_CTRL;
+#endif
 
 // The keys offered in the settings window. F, F11, L, P and Q are left out: they are the window's
 // own and the program's, and a player who bound one would lose the shortcut. Escape is offered —
@@ -309,7 +316,8 @@ private:
         }
         spec_ = spec;
         bytes_per_frame_ =
-            static_cast<int>(SDL_AUDIO_BYTESIZE(spec.format)) * static_cast<int>(spec.channels);
+            static_cast<int>(SDL_AUDIO_BYTESIZE(static_cast<unsigned>(spec.format))) *
+            static_cast<int>(spec.channels);
         buffer_.assign(static_cast<size_t>(CHUNK_FRAMES) * static_cast<size_t>(bytes_per_frame_),
                        0);
         return true;
@@ -431,7 +439,8 @@ public:
         hooks.high_resolution_text = settings().high_resolution_text;
         hooks.unlock_all_chapters = settings().unlock_all_chapters;
         hooks.context = this;
-        macos_settings_install(hooks);
+        hooks.game_window = window_;
+        settings_window_install(hooks);
         ensure_texture(SCREEN_WIDTH, SCREEN_HEIGHT);
         apply_presentation();
         // Show black until the game has drawn something.
@@ -491,12 +500,13 @@ public:
                 apply_frame_pacing();
                 break;
             case SDL_EVENT_KEY_DOWN:
-                // Command-comma opens the settings window. The menu item carries the same
+                // Command-comma opens the settings window on macOS, where every application
+                // keeps it; Control-comma everywhere else. The Mac menu item carries the same
                 // shortcut, but whether a key equivalent reaches the menu depends on how the
                 // window that has focus was made; handling it here works either way.
-                if (event.key.key == SDLK_COMMA && (event.key.mod & SDL_KMOD_GUI) != 0 &&
+                if (event.key.key == SDLK_COMMA && (event.key.mod & SETTINGS_MODIFIER) != 0 &&
                     !event.key.repeat) {
-                    macos_settings_open();
+                    settings_window_open();
                     break;
                 }
                 // Backspace and Return belong to whatever is being typed. Neither is offered in
@@ -730,6 +740,12 @@ public:
     bool choose_file(const std::string& prompt, const std::string& extension,
                      std::string& chosen_path) override {
         const auto answer = std::make_shared<Answer>();
+        // The dialog belongs to the game's window, and the system puts it where that window is:
+        // behind a terminal, on a machine where the program was started from one, unless the
+        // window is brought forward first. The console is told as well, since a dialog nobody
+        // can see looks exactly like a program that has stopped.
+        SDL_RaiseWindow(window_);
+        std::fprintf(stderr, "%s: opening the file browser\n", prompt.c_str());
         const SDL_DialogFileFilter filters[] = {{prompt.c_str(), extension.c_str()}};
         SDL_ShowOpenFileDialog(on_dialog_answer, new std::shared_ptr<Answer>(answer), window_,
                                filters, 1, nullptr, false);
@@ -757,6 +773,7 @@ private:
     struct Answer {
         std::atomic<bool> done{false};
         std::string path;
+        std::string error;  // why there was no dialog, when there was none
     };
 
     // SDL hands the callback the `userdata` it was given; that is a reference this class made
@@ -766,7 +783,11 @@ private:
         const std::unique_ptr<std::shared_ptr<Answer>> held(
             static_cast<std::shared_ptr<Answer>*>(userdata));
         Answer& result = **held;
-        if (paths != nullptr && paths[0] != nullptr) {
+        if (paths == nullptr) {
+            // The dialog could not be shown at all. SDL's error is per thread, and this may
+            // not be the thread `wait_for_dialog` waits on, so it is taken here.
+            result.error = SDL_GetError();
+        } else if (paths[0] != nullptr) {
             result.path = paths[0];
         }
         result.done.store(true, std::memory_order_release);
@@ -780,6 +801,10 @@ private:
             if (SDL_WaitEventTimeout(&event, 50) && event.type == SDL_EVENT_QUIT) {
                 return false;
             }
+        }
+        if (!answer.error.empty()) {
+            std::fprintf(stderr, "the file browser could not be opened: %s\n",
+                         answer.error.c_str());
         }
         chosen_path = answer.path;
         return !chosen_path.empty();
@@ -1035,7 +1060,7 @@ private:
             paced_rate_ = rate;  // what L goes back to
         }
         apply_frame_pacing();  // also paces from now, not from where the unlocked run left off
-        macos_settings_set_frame_rate(rate);
+        settings_window_set_frame_rate(rate);
         save_settings();
     }
 
@@ -1082,7 +1107,7 @@ private:
         apply_frame_pacing();
         apply_presentation();
         set_title_now();
-        macos_settings_set_frame_rate(settings().frame_rate);
+        settings_window_set_frame_rate(settings().frame_rate);
     }
 
     void apply_presentation() {

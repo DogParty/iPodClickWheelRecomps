@@ -10,7 +10,7 @@ deliberately removed; the reason is in the script's `PORTED` list.
 
 `python3 tools/port-from-holdem.py --check` reports both.
 
-Source tree: `/Users/lucille/Documents/Projects/iPod-Reverse-Engineer/ipod-emulator/recomps/HoldEm`
+Source tree: `../HoldEm`
 
 | file | source SHA-256 | ported SHA-256 |
 |---|---|---|

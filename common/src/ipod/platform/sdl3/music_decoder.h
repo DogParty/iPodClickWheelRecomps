@@ -14,11 +14,12 @@
 // about 20 MB decoded, and reading it up front would cost that much memory and a visible pause
 // at the start of every course.
 //
-// macOS decodes through AudioToolbox's ExtAudioFile, which is a system framework rather than a
-// new dependency. Everywhere else there is no decoder yet and `music_decoding_supported()`
-// answers false; the caller says so once and the game plays on in silence. Adding a platform
-// means implementing this interface for it — MediaCodec on Android, a bundled decoder
-// elsewhere — and nothing above this file changes.
+// macOS decodes through AudioToolbox's ExtAudioFile and Windows through a Media Foundation
+// source reader — each a system framework rather than a new dependency (a Windows "N" edition
+// without the Media Feature Pack has no decoder, and reports that once). Everywhere else there
+// is no decoder yet and `music_decoding_supported()` answers false; the caller says so once and
+// the game plays on in silence. Adding a platform means implementing this interface for it —
+// MediaCodec on Android, a bundled decoder elsewhere — and nothing above this file changes.
 #pragma once
 
 #include <SDL3/SDL.h>
