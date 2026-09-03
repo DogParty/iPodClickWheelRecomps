@@ -1,6 +1,6 @@
 # Cutting a release
 
-Six games, three platforms, one script. `common/tools/release.sh <version>` builds every artifact the machine it runs on can build and lays them out under `release/<version>/` with a `SHA256SUMS` beside them. It is the only description of how an artifact is made: continuous integration (`.github/workflows/release.yml`) calls it rather than repeating it, so a tag and a laptop cannot produce different things.
+Six games, three platforms, one script. `common/tools/release.sh <version>` builds every artifact the machine it runs on can build and lays them out under `release/<version>/` with a `SHA256SUMS` beside them. It is the only description of how an artifact is made. Releases are cut by hand on a machine that has the games' `gen/` and the toolchains, because a clean checkout cannot build the five recompiled titles without your own copy of each game.
 
     common/tools/release.sh 1.0.0                 # every title, every platform this machine can
     common/tools/release.sh 1.0.0 Vortex Lost     # only those two
@@ -28,7 +28,7 @@ Every artifact carries a `README.txt` written by `common/tools/artifact-readme.s
     Windows    needs only Docker — the MinGW toolchain is in a container
     Switch     needs only Docker — devkitPro is in a container
 
-So a Mac builds all three and a Linux runner builds the last two, which is exactly how the workflow splits its jobs. Anything the machine cannot build is skipped with a line saying so, and the run still succeeds; the checksums file lists what was actually made.
+So a Mac builds all three, and a Linux box builds the last two. Anything the machine cannot build is skipped with a line saying so, and the run still succeeds; the checksums file lists what was actually made.
 
 ## The macOS build is not built against your SDL
 
@@ -41,8 +41,8 @@ A Homebrew SDL is built for the machine it was installed on: one architecture, a
 ## Before the release
 
 - [ ] Bump `project(... VERSION x.y.z ...)` in each title's `CMakeLists.txt`. That is the only place a version is written: from there it reaches the macOS bundle's `Info.plist` and the Switch's own metadata, both of which read `PROJECT_VERSION` rather than a literal. The version in an artifact's *name* is the argument to this script and is yours to keep in step with it.
-- [ ] Tag it (`git tag v1.0.0`), so the source tarball is the tag rather than whatever `HEAD` happened to be. The script says which one it used.
-- [ ] Push the tag. The workflow drafts the release with everything attached; read it before making it public.
+- [ ] Tag it (`git tag v1.0.0` and push it), so the source tarball is the tag rather than whatever `HEAD` happened to be. The script says which one it used.
+- [ ] Run `common/tools/release.sh 1.0.0`, then draft the release from `release/1.0.0/` (for example `gh release create v1.0.0 release/1.0.0/* --draft`). Read it before making it public.
 
 ## Adding a title, or a platform
 
