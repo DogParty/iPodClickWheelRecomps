@@ -89,3 +89,13 @@ for carried in "$frameworks"/*.dylib; do
         install_name_tool -change "$lib" "@rpath/$base" "$carried"
     done
 done
+
+# install_name_tool invalidates the signature of everything it touched, and on Apple silicon an
+# invalid signature is not a warning: dyld kills the process at load (SIGKILL, "Code Signature
+# Invalid"). Ad-hoc signatures are the floor macOS will run, so everything the rewrites touched
+# is re-signed — the carried libraries first, then the bundle, whose seal covers them.
+for carried in "$frameworks"/*; do
+    [ -e "$carried" ] || continue
+    codesign --force --sign - "$carried" 2>/dev/null
+done
+codesign --force --sign - "$app" 2>/dev/null
