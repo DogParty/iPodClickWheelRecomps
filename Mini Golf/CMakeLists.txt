@@ -24,7 +24,7 @@ cmake_minimum_required(VERSION 3.21)
 if(APPLE AND NOT CMAKE_OSX_DEPLOYMENT_TARGET)
     set(CMAKE_OSX_DEPLOYMENT_TARGET 11.0 CACHE STRING "The oldest macOS this build runs on")
 endif()
-project(minigolf VERSION 0.2.0 LANGUAGES CXX)
+project(minigolf VERSION 1.0.1 LANGUAGES CXX)
 if(APPLE)
     enable_language(OBJCXX)  # the SDL build's menu bar (src/platform/sdl3/macos_menu.mm)
 endif()
@@ -324,16 +324,23 @@ if(MINIGOLF_SDL3 AND SDL3_SOURCES)
             # (common/src/ipod/platform/sdl3/music_decoder.cpp). It is the system's own codec,
             # the same bargain macOS and Windows make, and it ships with every Android since 5.0.
             target_link_libraries(minigolf PRIVATE mediandk)
+            # Where the program starts. Android is the one platform where that is SDL_main
+            # rather than main: the activity loads this library and calls it. SDL_main.h —
+            # included by src/runtime/main.cpp under this name — is what does the renaming.
+            #
+            # Android alone, deliberately. That header also renames `main` on Windows, and
+            # brings in SDL's own WinMain, which builds argv from GetCommandLineW as UTF-8
+            # instead of the CRT's ANSI one. Nothing above this reads argv expecting that, so
+            # a --gamedir with a non-ASCII character in it would change meaning on Windows for
+            # a rename Windows never needed. The headless build compiles the same file without
+            # this and keeps a plain main everywhere.
+            target_compile_definitions(minigolf PRIVATE MINIGOLF_SDL3_MAIN)
         endif()
     else()
         minigolf_add_executable(minigolf "${SDL3_SOURCES}")
     endif()
     if(TARGET minigolf)
         target_link_libraries(minigolf PRIVATE ${MINIGOLF_SDL3_TARGET})
-        # Where the program starts. On Android that is SDL_main rather than main, and
-        # SDL_main.h — included by src/runtime/main.cpp under this name — is what renames it.
-        # The headless build compiles the same file without this and keeps a plain main.
-        target_compile_definitions(minigolf PRIVATE MINIGOLF_SDL3_MAIN)
         if(APPLE)
             # Cocoa for the settings window; AudioToolbox to decode the AAC music, which SDL
             # does not (src/platform/sdl3/music_decoder.cpp). Both are system frameworks.

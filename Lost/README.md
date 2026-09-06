@@ -47,6 +47,19 @@ open build/lost.app
 
 You get a real `.app` that carries its own SDL inside it. It isn't signed, so macOS might refuse to open it the first time. If it does, go to System Settings > Privacy & Security and click Allow on the row that mentions Lost.
 
+### Linux
+
+Nothing special here. Grab SDL3 and zlib from your distribution and build it the normal way:
+
+```sh
+cmake -B build && cmake --build build
+./build/lost
+```
+
+On Fedora that's `sudo dnf install cmake gcc-c++ SDL3-devel zlib-ng-compat-devel`, and on Debian or Ubuntu it's `sudo apt install cmake g++ libsdl3-dev zlib1g-dev`. If your distribution is too old to have SDL3, build SDL from source and point CMake at it with `-DSDL3_DIR=`.
+
+The first run puts your game files in `~/.local/share/ipod-lost/1B200`, or wherever `$XDG_DATA_HOME` points. There's no settings window on Linux, since that one's a Cocoa window on macOS and a Win32 one on Windows and nobody's written a third, so the frame rate, scaling and key bindings are whatever the saved settings say. There's no background music either, since the `.m4a` tracks need a decoder and Linux hasn't got an obvious system one to borrow. The sound effects all work.
+
 ### Windows
 
 There's a 64-bit Windows build, the same program as the Mac one, made inside a container so all you actually need is Docker:

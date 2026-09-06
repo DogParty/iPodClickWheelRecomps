@@ -12,7 +12,7 @@ One file per game per platform, named `<game>-<version>-<platform>.zip`, plus a 
 | | |
 |---|---|
 | `<game>-<version>-macos.zip` | `<Game>.app`, universal (arm64 and x86_64), macOS 11 and later |
-| `<game>-<version>-linux-x86_64.zip` | the executable, against the host's SDL3 and zlib |
+| `<game>-<version>-linux-<arch>.zip` | the executable, against the host's SDL3 and zlib (`<arch>` from `uname -m`) |
 | `<game>-<version>-windows-x64.zip` | the `.exe` and `SDL3.dll` beside it |
 | `<game>-<version>-switch.zip` | the `.nro` for the Homebrew Menu (Mini Golf only, so far) |
 | `<game>-<version>-android.zip` | the `.apk`, arm64 (Mini Golf only, so far) |

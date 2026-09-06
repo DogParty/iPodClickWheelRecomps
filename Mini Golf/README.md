@@ -51,22 +51,16 @@ Note that this game hasn't been signed so macOS might not let you open it. If th
 
 ### Linux
 
-Nothing special: SDL3 and zlib from your distribution, and the ordinary build.
+Nothing special here. Grab SDL3 and zlib from your distribution and build it the normal way:
 
 ```sh
 cmake -B build && cmake --build build
 ./build/minigolf
 ```
 
-On Fedora that's `sudo dnf install cmake gcc-c++ SDL3-devel zlib-ng-compat-devel`; on Debian and
-Ubuntu, `sudo apt install cmake g++ libsdl3-dev zlib1g-dev`. If your distribution is old enough
-that it has no SDL3, build SDL from source and point CMake at it with `-DSDL3_DIR=`.
+On Fedora that's `sudo dnf install cmake gcc-c++ SDL3-devel zlib-ng-compat-devel`, and on Debian or Ubuntu it's `sudo apt install cmake g++ libsdl3-dev zlib1g-dev`. If your distribution is too old to have SDL3, build SDL from source and point CMake at it with `-DSDL3_DIR=`.
 
-The game's files go where the first run puts them, `~/.local/share/ipod-mini-golf/88888`, or
-wherever `$XDG_DATA_HOME` says. There's no settings window on Linux — that's a Cocoa window on
-macOS and a Win32 one on Windows, and nobody has written the third — so the frame rate, the
-scaling and the key bindings are whatever the saved settings say, and the in-game Options and
-Cheats screens still work. There's no background music either: the `.m4a` tracks need a decoder, and unlike macOS, Windows and Android there's no obvious system one to borrow here. The sound effects all work.
+The first run puts your game files in `~/.local/share/ipod-mini-golf/88888`, or wherever `$XDG_DATA_HOME` points. There's no settings window on Linux, since that one's a Cocoa window on macOS and a Win32 one on Windows and nobody's written a third, so the frame rate, scaling and key bindings are whatever the saved settings say. The in-game Options and Cheats screens still work. There's no background music either, since the `.m4a` tracks need a decoder and Linux hasn't got an obvious system one to borrow like macOS, Windows and Android do. The sound effects all work.
 
 ### Windows
 
@@ -78,7 +72,7 @@ tools/windows-build.sh
 
 That leaves `minigolf.exe` and the `SDL3.dll` it loads in `build-windows/dist/`. On a real Windows machine with MSVC you can also just `cmake -B build` the normal way. Either way, I haven't put many hours into Windows yet, so treat it as working but lightly tested. 
 
-One thing to note is that Windows supports .m4a background music through its Media Foundation library, as macOS does through AudioToolbox and Android through MediaCodec. Linux and the Switch have no decoder here yet, so they play the sound effects and no music.
+One thing to note is that Windows supports .m4a background music through its Media Foundation library, the same way macOS does through AudioToolbox and Android does through MediaCodec. Linux and the Switch haven't got a decoder yet, so those two play the sound effects and no music.
 
 ### Nintendo Switch
 
@@ -94,11 +88,7 @@ Big caveat here: I haven't booted my Switch in years so this has never actually 
 
 ### Android
 
-There's an Android build too, for a handheld with a physical gamepad — a Retroid, an Odin, a
-Steam-Deck-shaped thing running Android. `tools/android-build.sh` produces and installs an APK.
-Unlike the Windows and Switch builds it is not containerised, because every piece of it is a
-download that needs no root and no package manager. See `android/README.md` for the whole of it,
-start to finish; the short version is:
+There's an Android build too, meant for a handheld with a real gamepad like a Retroid or an Odin. `tools/android-build.sh` makes an APK and can install it for you. This one isn't containerised like the Windows and Switch builds are, because every piece of the toolchain is just a download that needs no root and no package manager. `android/README.md` walks through all of it from an empty machine, but the short version is:
 
 ```sh
 tools/android-build.sh install
@@ -110,14 +100,9 @@ with three things in place beforehand (the script says which one is missing, if 
     ~/Android/Sdk                the platform and build-tools for API 35
     ~/Android/sdl3/prefix        SDL3's Android release, unpacked
 
-Copy your `88888` or `Mini Golf` folder to `/sdcard/Android/data/org.ipodrecomp.minigolf/files/` and start
-it; if it isn't there the app says so on screen, with the path, the way the Switch build does.
+Copy your `88888` or `Mini Golf` folder to `/sdcard/Android/data/org.ipodrecomp.minigolf/files/` and start it. If it isn't there the app tells you so on screen along with the path, the same way the Switch build does.
 
-The D-pad turns the wheel, A selects, B is Menu. There's no settings window, the same as Linux,
-and names are spelled out on the wheel rather than with the on-screen keyboard, the same as the
-Switch. The background music does play: Android's own MediaCodec decodes the `.m4a` tracks. The launcher icon is the game's own artwork and so is not in this
-repository: `tools/android-icon.py` makes it from a copy you supply, and without it the app
-simply gets the system's default icon.
+The D-pad turns the wheel, A selects and B is Menu. There's no settings window, same as Linux, and you spell names out on the wheel instead of using the on-screen keyboard, same as the Switch. The background music does play here, since Android's own MediaCodec decodes the `.m4a` tracks. The launcher icon is the game's own artwork so it isn't in this repository. `tools/android-icon.py` makes one from a copy you supply, and without it the app just gets the system's default icon.
 
 ## Legal
 

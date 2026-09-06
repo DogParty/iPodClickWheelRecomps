@@ -2,7 +2,7 @@
 
 This is Apple's own Texas Hold'em from 2006, the very first version, and it shows. The felt, the chips, the players all look extremely 2006, which is most of the charm. You spin the wheel to move around the table and click to bet, call, or fold, which on a modern machine is the arrow keys or a gamepad and the select key.
 
-Like the other games that aren't Mini Golf, it isn't fully recompiled yet, so under the hood there's still a lot of machine translation of the iPod's own code rather than mostly-readable C++. It runs on macOS and Windows.
+Like the other games that aren't Mini Golf, it isn't fully recompiled yet, so under the hood there's still a lot of machine translation of the iPod's own code rather than mostly-readable C++. It runs on macOS, Linux and Windows.
 
 ## The game's files
 
@@ -39,6 +39,19 @@ open build/holdem.app
 ```
 
 You get a real `.app` that carries its own SDL inside it. It isn't signed, so macOS might refuse to open it the first time. If it does, go to System Settings > Privacy & Security and click Allow on the row that mentions Texas Hold'em.
+
+### Linux
+
+Nothing special here. Grab SDL3 and zlib from your distribution and build it the normal way:
+
+```sh
+cmake -B build && cmake --build build
+./build/holdem
+```
+
+On Fedora that's `sudo dnf install cmake gcc-c++ SDL3-devel zlib-ng-compat-devel`, and on Debian or Ubuntu it's `sudo apt install cmake g++ libsdl3-dev zlib1g-dev`. If your distribution is too old to have SDL3, build SDL from source and point CMake at it with `-DSDL3_DIR=`.
+
+The first run puts your game files in `~/.local/share/ipod-holdem/33333`, or wherever `$XDG_DATA_HOME` points. There's no settings window on Linux, since that one's a Cocoa window on macOS and a Win32 one on Windows and nobody's written a third, so the frame rate, scaling and key bindings are whatever the saved settings say. There's no background music either, since the `.m4a` tracks need a decoder and Linux hasn't got an obvious system one to borrow. The sound effects all work.
 
 ### Windows
 

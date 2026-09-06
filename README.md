@@ -11,9 +11,9 @@ On one hand, it's amazing that these games were discovered, preserved, and playa
 This project aims to bring these games over from the aged hardware to modern machines. At the moment, six games have been decompiled and recompiled to run on current hardware. Each folder here is
 one of those games, translated from the ARM code the iPod ran into C++ that a modern machine can compile. They all share a common library to ease recompilation and porting to new platforms. 
 
-For the first time in the last 20 years, these games are now playable on more than just an iPod! The six games support macOS, Linux and Windows, while Mini Golf also runs on the Nintendo Switch and on Android — which means an Android handheld with a real gamepad, like a Retroid, plays these with a D-pad and buttons rather than a keyboard. Adding support for new platforms is pretty easy; just look at how each recomp's platform works. 
+For the first time in the last 20 years, these games are now playable on more than just an iPod! The six games support macOS, Linux and Windows while Mini Golf also supports being run on the Switch and on Android. That last one means you can play it on an Android handheld like a Retroid with a real D-pad and buttons instead of a keyboard. Adding support for new platforms is pretty easy; just look at how each recomp's platform works. 
 
-Linux and the two handheld builds have no settings window — that one is a Cocoa window on macOS and a Win32 one on Windows. Background music plays everywhere except Linux and the Switch: the `.m4a` tracks need a decoder, and macOS, Windows and Android each have one of their own to borrow. Everything else is the same game.
+Linux, the Switch and Android don't get a settings window, since that one's a Cocoa window on macOS and a Win32 one on Windows. Background music plays everywhere except Linux and the Switch, because the `.m4a` tracks need a decoder and macOS, Windows and Android each have one of their own to borrow. Everything else is the same game.
 
 One difficult part about running these games on modern hardware is input. Each of these games expect a click wheel. Some expect it to be spun in certain directions, tapped at certain points, and/or clicked to access the buttons corresponding to its cardinal directions. The recomps aim to map it to what your machine does have: arrow keys, a gamepad stick, or the D-pad. I wouldn't describe it as perfect at the moment but it suffices. You can also rebind keys on macOS and Windows.
 
@@ -32,13 +32,13 @@ Each game's folder has its own README with details on how to build it, how it wa
 | `Sims Bowling` | macOS, Linux, Windows | `1500C` |
 | `Vortex` | macOS, Linux, Windows | `12345` |
 
-When opening the game for the first time on macOS and Windows, you will be asked for the game's folder. The game then checks every file against the sizes and checksums it shipped with, and keeps it beside your saves from then on.
+When opening the game for the first time on macOS, Linux and Windows, you will be asked for the game's folder. The game then checks every file against the sizes and checksums it shipped with, and keeps it beside your saves from then on.
 
 `common/` is the shared half: the software renderer, the runtime, the platform layer, the recompiler and the build tooling. 
 
 Mini Golf is the furthest along, being the only one with no machine-translated code left in it and the only one that runs on a Switch or on Android.
 
-The two handheld builds have no file browser to ask with, so the game's folder has to be put in place before the first launch; each says on screen where that is, and `Mini Golf/android/README.md` walks through the Android build from an empty machine.
+The Switch and Android builds have no file browser to ask you with, so you have to put the game's folder in place before the first launch. Each one tells you on screen where that is, and `Mini Golf/android/README.md` walks through the Android build from an empty machine.
 
 ## Recomp Improvements
 
