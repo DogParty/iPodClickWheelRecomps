@@ -41,6 +41,29 @@ for required in "$ANDROID_NDK/build/cmake/android.toolchain.cmake" "$ANDROID_PLA
     fi
 done
 
+# The NDK's own binaries live under a directory named for the machine doing the building —
+# `linux-x86_64` on Linux, `darwin-x86_64` on a Mac — so it is looked up rather than spelled.
+# Resolved here, with the other pieces, so a Mac hears about it now and not after a full compile.
+llvm_strip=
+for candidate in "$ANDROID_NDK"/toolchains/llvm/prebuilt/*/bin/llvm-strip; do
+    if [ -x "$candidate" ]; then
+        llvm_strip=$candidate
+        break
+    fi
+done
+if [ -z "$llvm_strip" ]; then
+    echo "android-build.sh: no llvm-strip under $ANDROID_NDK/toolchains/llvm/prebuilt" >&2
+    echo "That NDK is for a different machine than this one, or is incomplete." >&2
+    exit 2
+fi
+
+# `sed -i` is two incompatible flags wearing one name: GNU's takes no argument and BSD's (which
+# is the one on a Mac) demands a backup suffix, so neither spelling runs on the other machine.
+# A temporary file is what both agree on, and this script is meant to build on both.
+edit_in_place() {  # expression file
+    sed "$1" "$2" > "$2.new" && mv "$2.new" "$2"
+}
+
 build="$here/build-android"
 if [ "${1:-}" = "clean" ] || [ "${2:-}" = "clean" ]; then
     rm -rf "$build"
@@ -90,8 +113,8 @@ cp "$here/android/AndroidManifest.xml" "$manifest"
 version=$(sed -n 's/^project(minigolf VERSION \([0-9][0-9.]*\).*/\1/p' "$here/CMakeLists.txt")
 if [ -n "$version" ]; then
     code=$(echo "$version" | awk -F. '{printf "%d", $1 * 10000 + $2 * 100 + $3}')
-    sed -i "s|android:versionCode=\"[^\"]*\"|android:versionCode=\"$code\"|" "$manifest"
-    sed -i "s|android:versionName=\"[^\"]*\"|android:versionName=\"$version\"|" "$manifest"
+    edit_in_place "s|android:versionCode=\"[^\"]*\"|android:versionCode=\"$code\"|" "$manifest"
+    edit_in_place "s|android:versionName=\"[^\"]*\"|android:versionName=\"$version\"|" "$manifest"
     echo "android-build.sh: version $version (versionCode $code)"
 fi
 resources=""
@@ -123,7 +146,7 @@ ADAPTIVE
     fi
     "$ANDROID_BUILD_TOOLS/aapt2" compile --dir "$stage/res" -o "$stage/res.zip"
     resources="$stage/res.zip"
-    sed -i 's|<application |<application android:icon="@mipmap/ic_launcher" |' "$manifest"
+    edit_in_place 's|<application |<application android:icon="@mipmap/ic_launcher" |' "$manifest"
 else
     echo "android-build.sh: no android/icon.png — building without a launcher icon"
 fi
@@ -136,8 +159,7 @@ fi
 
 # The libraries. Stripped: the debug information is a tenth of the download and nothing on the
 # device reads it.
-"$ANDROID_NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip" \
-    "$build/libmain.so" -o "$stage/lib/$abi/libmain.so"
+"$llvm_strip" "$build/libmain.so" -o "$stage/lib/$abi/libmain.so"
 cp "$SDL3_ANDROID/lib/$abi/libSDL3.so" "$stage/lib/$abi/libSDL3.so"
 
 (cd "$stage" && zip -q -r base.apk classes.dex lib)
