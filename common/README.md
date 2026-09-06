@@ -8,7 +8,7 @@ This is the shared part of every recomp here.
 - The **runtime**: the little model of the iPod's CPU and memory that the translated code runs on top of.
 - The **renderer**, a from-scratch reimplementation of the iPod's graphics chip in plain software, since these games talk to a GPU that no longer exists. This is the piece that had the most bugs shared between games, which is exactly why it's shared now.
 - The **platform layer**: the window, the keyboard and input, the settings window, where saves go, and the bits that read the clock and battery off your actual machine.
-- The **build tooling**, including the scripts that make the macOS, Windows, and Switch builds.
+- The **build tooling**, including the scripts that make the macOS, Linux, Windows, Switch, and Android builds.
 
 The framework interfaces (what a game is allowed to ask the platform to do) live here too, as plain C++ with no trace of the iPod's original calling convention.
 
