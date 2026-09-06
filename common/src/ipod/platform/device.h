@@ -18,7 +18,7 @@
 // **And why there is a seam.** Some platforms will not answer this library directly. Android is
 // the case: an app there is refused `/sys/class/power_supply`, and the charge is the system's to
 // hand over rather than a file to read. Asking for it needs SDL, which this library deliberately
-// does not link (../../../common/CMakeLists.txt), so the platform layer installs a reader
+// does not link (../../../CMakeLists.txt), so the platform layer installs a reader
 // instead — `set_battery_reader` below.
 #pragma once
 

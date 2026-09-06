@@ -151,9 +151,15 @@ An APK for a 64-bit Android device, meant for a handheld with a real gamepad.
 
 3. Launch it from the app list. Saves and settings are kept beside the game's files.
 
-The D-pad turns the click wheel, A selects, B is Menu. There is no settings window and no
-a name is spelled out on the wheel rather than with the on-screen keyboard. The background
-music plays, decoded by the device's own codec. Holding B leaves the game, as holding Menu left it on the iPod.
+The D-pad turns the click wheel, A selects, B is Menu. Holding B leaves the game, as holding
+Menu left it on the iPod.
+
+There is no settings window — that one is a Cocoa window on macOS and a Win32 one on Windows,
+and nobody has written a third — so the frame rate, the picture scaling and the key bindings
+come from the settings file and the defaults. The game's own Options and Cheats screens work as
+they do everywhere. A name is spelled out on the wheel rather than with the on-screen keyboard,
+which would otherwise cover the letters it was helping you pick. The background music plays,
+decoded by the device's own codec.
 
 This APK is signed with a debug key, which is enough to install and play and not enough to
 publish. Android may warn you about that; it is the same warning any unsigned or
