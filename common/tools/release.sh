@@ -117,8 +117,8 @@ sdl3_framework_cmake_dir() {
     printf '%s\n' "$framework/Versions/A/Resources/CMake"
 }
 
-package_macos() {  # dir exe display folder datadir
-    dir=$1; exe=$2; display=$3; folder=$4; datadir=$5
+package_macos() {  # dir exe display folder datadir linuxdir
+    dir=$1; exe=$2; display=$3; folder=$4; datadir=$5; linuxdir=$6
     if [ "$host" != "Darwin" ]; then
         skip "macOS needs a Mac"
         return 0
@@ -142,7 +142,7 @@ package_macos() {  # dir exe display folder datadir
     cp -R "$app" "$stage/$display.app"
     cp "$here/common/licenses/SDL3-LICENSE.txt" "$stage/"
     cp "$here/LICENSE" "$stage/COPYING.txt"
-    "$tools/artifact-readme.sh" "$display" "$version" macos "$folder" "$datadir" "$exe" \
+    "$tools/artifact-readme.sh" "$display" "$version" macos "$folder" "$datadir" "$exe" "$linuxdir" \
         > "$stage/README.txt"
     ( cd "$stage" && zip -q -r -y "$out/$exe-$version-macos.zip" . )
     rm -rf "$stage"
@@ -154,8 +154,8 @@ arch_of_app() {
     lipo -archs "$1/Contents/MacOS/"* 2>/dev/null | head -1 || echo "unknown"
 }
 
-package_windows() {  # dir exe display folder datadir
-    dir=$1; exe=$2; display=$3; folder=$4; datadir=$5
+package_windows() {  # dir exe display folder datadir linuxdir
+    dir=$1; exe=$2; display=$3; folder=$4; datadir=$5; linuxdir=$6
     if [ "$have_docker" != yes ]; then
         skip "Windows needs Docker (the toolchain is in a container)"
         return 0
@@ -168,15 +168,88 @@ package_windows() {  # dir exe display folder datadir
     cp "$built/$exe.exe" "$built/SDL3.dll" "$stage/"
     cp "$here/common/licenses/SDL3-LICENSE.txt" "$stage/"
     cp "$here/LICENSE" "$stage/COPYING.txt"
-    "$tools/artifact-readme.sh" "$display" "$version" windows "$folder" "$datadir" "$exe" \
+    "$tools/artifact-readme.sh" "$display" "$version" windows "$folder" "$datadir" "$exe" "$linuxdir" \
         > "$stage/README.txt"
     ( cd "$stage" && zip -q -r "$out/$exe-$version-windows-x64.zip" . )
     rm -rf "$stage"
     say "  $exe-$version-windows-x64.zip"
 }
 
-package_switch() {  # dir exe display folder datadir
-    dir=$1; exe=$2; display=$3; folder=$4; datadir=$5
+# The oldest glibc a built program will accept, read out of the versions it asks its libc for.
+# A Linux binary is built against the machine that built it and runs on that glibc or newer, so
+# this is the one fact a player needs and the one thing a release cannot decide for them.
+glibc_floor() {
+    readelf -V "$1" 2>/dev/null | sed -n 's/.*GLIBC_\([0-9][0-9.]*\).*/\1/p' |
+        sort -V | tail -1
+}
+
+package_linux() {  # dir exe display folder datadir linuxdir
+    dir=$1; exe=$2; display=$3; folder=$4; datadir=$5; linuxdir=$6
+    if [ "$host" != "Linux" ]; then
+        skip "Linux needs a Linux machine"
+        return 0
+    fi
+    ( cd "$here/$dir" &&
+      cmake -B build-release -DCMAKE_BUILD_TYPE=Release > /dev/null &&
+      cmake --build build-release --target "$exe" -j"$(nproc)" > /dev/null )
+    built="$here/$dir/build-release/$exe"
+    [ -f "$built" ] || { skip "Linux: no $exe was built"; return 0; }
+    # The architecture is in the name here and nowhere else, because it has to be: unlike macOS
+    # there is no universal binary to hide it in, and unlike Windows there is more than one
+    # architecture people actually run.
+    arch=$(uname -m)
+    floor=$(glibc_floor "$built")
+    stage="$out/stage-$exe-linux"
+    rm -rf "$stage"; mkdir -p "$stage"
+    cp "$built" "$stage/"
+    strip "$stage/$exe" 2>/dev/null || true
+    cp "$here/common/licenses/SDL3-LICENSE.txt" "$stage/"
+    cp "$here/LICENSE" "$stage/COPYING.txt"
+    GLIBC_FLOOR="$floor" "$tools/artifact-readme.sh" "$display" "$version" linux "$folder" \
+        "$datadir" "$exe" "$linuxdir" > "$stage/README.txt"
+    ( cd "$stage" && zip -q -r "$out/$exe-$version-linux-$arch.zip" . )
+    rm -rf "$stage"
+    say "  $exe-$version-linux-$arch.zip  (glibc ${floor:-unknown} and later)"
+}
+
+package_android() {  # dir exe display folder datadir linuxdir
+    dir=$1; exe=$2; display=$3; folder=$4; datadir=$5; linuxdir=$6
+    script="$here/$dir/tools/android-build.sh"
+    if [ ! -x "$script" ]; then
+        skip "Android: this title has no android-build.sh"
+        return 0
+    fi
+    # The toolchain is three no-root downloads rather than a container; the build script names
+    # whichever is missing, but say it here too so a release run reads as one story.
+    for piece in "${ANDROID_NDK:-$HOME/Android/android-ndk-r28c}" \
+                 "${ANDROID_SDK:-$HOME/Android/Sdk}" \
+                 "${SDL3_ANDROID:-$HOME/Android/sdl3/prefix}"; do
+        if [ ! -d "$piece" ]; then
+            skip "Android needs $piece (see $dir/android/README.md)"
+            return 0
+        fi
+    done
+    ( cd "$here/$dir" && ./tools/android-build.sh > /dev/null ) || true
+    apk="$here/$dir/build-android/$exe.apk"
+    [ -f "$apk" ] || { skip "Android: no $exe.apk was built"; return 0; }
+    stage="$out/stage-$exe-android"
+    rm -rf "$stage"; mkdir -p "$stage"
+    cp "$apk" "$stage/"
+    cp "$here/common/licenses/SDL3-LICENSE.txt" "$stage/"
+    # Android is the one platform whose build links the C++ standard library into the program
+    # instead of loading the system's, so the only artifact that has to carry its licence.
+    cp "$here/common/licenses/LIBCXX-LICENSE.txt" "$stage/"
+    cp "$here/LICENSE" "$stage/COPYING.txt"
+    "$tools/artifact-readme.sh" "$display" "$version" android "$folder" "$datadir" "$exe" "$linuxdir" \
+        > "$stage/README.txt"
+    ( cd "$stage" && zip -q -r "$out/$exe-$version-android.zip" . )
+    rm -rf "$stage"
+    # No architecture in the name: this is arm64 and nothing else, as the Switch build is.
+    say "  $exe-$version-android.zip  (arm64, signed with a debug key)"
+}
+
+package_switch() {  # dir exe display folder datadir linuxdir
+    dir=$1; exe=$2; display=$3; folder=$4; datadir=$5; linuxdir=$6
     if [ "$have_docker" != yes ]; then
         skip "Switch needs Docker (devkitPro is in a container)"
         return 0
@@ -189,7 +262,7 @@ package_switch() {  # dir exe display folder datadir
     cp "$nro" "$stage/"
     # No SDL on this one, but the GPL text travels with every binary the licence covers.
     cp "$here/LICENSE" "$stage/COPYING.txt"
-    "$tools/artifact-readme.sh" "$display" "$version" switch "$folder" "$datadir" "$exe" \
+    "$tools/artifact-readme.sh" "$display" "$version" switch "$folder" "$datadir" "$exe" "$linuxdir" \
         > "$stage/README.txt"
     ( cd "$stage" && zip -q -r "$out/$exe-$version-switch.zip" . )
     rm -rf "$stage"
@@ -199,15 +272,17 @@ package_switch() {  # dir exe display folder datadir
 # ---------------------------------------------------------------------------------------------
 # Every title the table names.
 # ---------------------------------------------------------------------------------------------
-while IFS='|' read -r dir exe display folder datadir platforms; do
+while IFS='|' read -r dir exe display folder datadir linuxdir platforms; do
     case "$dir" in ''|\#*) continue ;; esac
     selected "$dir" || continue
     say "$display"
     for platform in $platforms; do
         case "$platform" in
-            macos)   package_macos   "$dir" "$exe" "$display" "$folder" "$datadir" ;;
-            windows) package_windows "$dir" "$exe" "$display" "$folder" "$datadir" ;;
-            switch)  package_switch  "$dir" "$exe" "$display" "$folder" "$datadir" ;;
+            macos)   package_macos   "$dir" "$exe" "$display" "$folder" "$datadir" "$linuxdir" ;;
+            linux)   package_linux   "$dir" "$exe" "$display" "$folder" "$datadir" "$linuxdir" ;;
+            windows) package_windows "$dir" "$exe" "$display" "$folder" "$datadir" "$linuxdir" ;;
+            switch)  package_switch  "$dir" "$exe" "$display" "$folder" "$datadir" "$linuxdir" ;;
+            android) package_android "$dir" "$exe" "$display" "$folder" "$datadir" "$linuxdir" ;;
         esac
     done
     say ""

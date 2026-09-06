@@ -20,8 +20,10 @@ namespace minigolf::gamedata {
 [[nodiscard]] bool install_from_zip(const std::string& zip_path, const std::string& game_dir,
                                     std::string& why);
 
-// The game directory to run from: `<data_dir>/88888` once it verifies. Until it does, asks the
-// platform for a zip to install from, repeating on a bad zip; empty if the player gives up.
+// The game directory to run from: `<data_dir>/88888`, or `<data_dir>/Mini Golf` — either name is
+// accepted, because the copy a player has is as likely to carry one as the other (manifest.h).
+// Until one of them verifies, asks the platform for a zip to install from, repeating on a bad
+// zip; empty if the player gives up. An install always writes the numbered name.
 std::string locate_game(platform::Platform& platform, const std::string& data_dir);
 
 }  // namespace minigolf::gamedata

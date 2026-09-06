@@ -18,21 +18,22 @@ set -eu
 binary=${1:-build/minigolf-headless}
 here=$(cd "$(dirname "$0")/.." && pwd)
 script="$here/tests/scripts/return-to-menu.script"
-: "${GAME_DIR:=$here/../../../20 iPod games/Games_RO/88888}"
-if [ ! -f "$binary" ] || [ ! -f "$script" ] || [ ! -f "$GAME_DIR/Executables/Minigolf_1_1_2563296.bin" ]; then
+. "$here/tests/game-dir.sh"
+resolve_game_dir
+if [ ! -f "$binary" ] || [ ! -f "$script" ] || [ ! -f "$GAME_DIR/$GAME_IMAGE_PATH" ]; then
     echo "return-to-menu.sh: missing the game or the build (set GAME_DIR to your copy)" >&2
     exit 2
 fi
 
 copy="$here/build/game-return-to-menu"
-if [ ! -f "$copy/Executables/Minigolf_1_1_2563296.bin" ]; then
+if [ ! -f "$copy/$GAME_IMAGE_PATH" ]; then
     rm -rf "$copy"
     cp -R "$GAME_DIR" "$copy"
 fi
 find "$copy" -name '*.sav' -delete
 
 log="$here/build/return-to-menu.stdout"
-"$binary" "$copy/Executables/Minigolf_1_1_2563296.bin" --gamedir="$copy" --script="$script" \
+"$binary" "$copy/$GAME_IMAGE_PATH" --gamedir="$copy" --script="$script" \
     --frames=12800 --time=07:53 > "$log" 2>&1 ||
     { echo "return-to-menu.sh: the game exited with status $? (see $log)" >&2
       echo "return-to-menu.sh: an assert trap here means the card's render is gone again." >&2

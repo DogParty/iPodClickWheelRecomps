@@ -19,14 +19,15 @@ set -eu
 binary=${1:-build/minigolf-headless}
 here=$(cd "$(dirname "$0")/.." && pwd)
 script="$here/tests/scripts/hole.script"
-: "${GAME_DIR:=$here/../../../20 iPod games/Games_RO/88888}"
-if [ ! -f "$binary" ] || [ ! -f "$script" ] || [ ! -f "$GAME_DIR/Executables/Minigolf_1_1_2563296.bin" ]; then
+. "$here/tests/game-dir.sh"
+resolve_game_dir
+if [ ! -f "$binary" ] || [ ! -f "$script" ] || [ ! -f "$GAME_DIR/$GAME_IMAGE_PATH" ]; then
     echo "pause-menu.sh: missing the game or the build (set GAME_DIR to your copy)" >&2
     exit 2
 fi
 
 copy="$here/build/game-pause-menu"
-if [ ! -f "$copy/Executables/Minigolf_1_1_2563296.bin" ]; then
+if [ ! -f "$copy/$GAME_IMAGE_PATH" ]; then
     rm -rf "$copy"
     cp -R "$GAME_DIR" "$copy"
 fi
@@ -35,7 +36,7 @@ find "$copy" -name '*.sav' -delete
 # hole.script presses Menu at frame 9200 and takes screenshots at 9600 and 10200 — after the pause
 # menu has opened, and again after Select has resumed the hole.
 log="$here/build/pause-menu.stdout"
-"$binary" "$copy/Executables/Minigolf_1_1_2563296.bin" --gamedir="$copy" --script="$script" \
+"$binary" "$copy/$GAME_IMAGE_PATH" --gamedir="$copy" --script="$script" \
     --frames=10400 --time=07:53 > "$log" 2>&1 ||
     { echo "pause-menu.sh: the game exited with status $? (see $log)" >&2; exit 1; }
 

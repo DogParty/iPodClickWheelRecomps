@@ -32,10 +32,12 @@ script="$here/tests/scripts/$case_name.script"
 expected="$here/tests/expected/$case_name.calls"
 actual="$here/build/$case_name.actual.calls"
 
-# The game image and its resources. GAME_DIR may be set in the environment; the default is the
-# layout the repository was developed against.
-: "${GAME_DIR:=$here/../../../20 iPod games/Games_RO/88888}"
-image="$GAME_DIR/Executables/Minigolf_1_1_2563296.bin"
+# The game image and its resources. GAME_DIR may be set in the environment; without it,
+# tests/game-dir.sh looks in the layout the repository was developed against and then in the
+# directory the game installs into.
+. "$here/tests/game-dir.sh"
+resolve_game_dir
+image="$GAME_DIR/$GAME_IMAGE_PATH"
 
 # Exit 2 means "cannot run this case", which CTest is told to treat as a skip: the game image
 # is the player's own copy and is not in the repository. GAME_DIR in the environment overrides
@@ -51,16 +53,18 @@ done
 # does at start-up. Each run therefore uses a fresh copy of the game directory (without any
 # saves), so the reference copy stays untouched and every run starts the same way.
 copy="$here/build/game-$case_name"
-if [ ! -f "$copy/Executables/Minigolf_1_1_2563296.bin" ]; then
+if [ ! -f "$copy/$GAME_IMAGE_PATH" ]; then
     rm -rf "$copy"
     cp -R "$GAME_DIR" "$copy"
 fi
 find "$copy" -name '*.sav' -delete
-image="$copy/Executables/Minigolf_1_1_2563296.bin"
+image="$copy/$GAME_IMAGE_PATH"
 GAME_DIR=$copy
 
 # The title screen shows the time of day, so the recordings depend on the hour they were made
-# at (a one-digit hour). --time pins the game's clock to one.
+# at (a one-digit hour). --time pins the game's clock to one, and --battery pins the gauge
+# drawn beside it, which is the other half of the same problem: a picture taken on a laptop
+# at 80% is not the picture taken on one at 74%.
 clock=07:53
 
 # The emulator runs the frame on which the script says `quit`, so the frame count is one more

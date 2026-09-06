@@ -38,6 +38,15 @@
 #if defined(_WIN32)
 #include <windows.h>
 #endif
+// Android starts a program from Java: SDL's activity loads the build as a shared library and
+// calls SDL_main rather than main, so the entry point below has to be renamed. SDL_main.h is
+// what does the renaming — it is where SDL_MAIN_NEEDED is defined, and it is deliberately not
+// pulled in by SDL.h. Only the SDL build wants it, and this file is also compiled into the
+// headless build, which has no SDL at all; so the title's CMakeLists.txt defines this for the
+// SDL target alone.
+#if defined(MINIGOLF_SDL3_MAIN)
+#include <SDL3/SDL_main.h>
+#endif
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
@@ -63,6 +72,7 @@ struct Options {
     std::string call_log_path;  // where to write the framework-call log
     std::string install_zip;    // install the game's files from this zip before running
     std::string fixed_time;     // HH:MM shown by the game's clock, for reproducible runs
+    std::string fixed_battery;  // 0..100 shown by the game's gauge, for the same reason
     std::string program_name;   // argv[0], for a message that says how to run it again
     unsigned frame_limit = 0;   // stop after this many frames; 0 = run until quit
     // Behave as the emulator's own harness did — no button press times, and no quitting when the
@@ -86,7 +96,8 @@ struct Options {
     std::fprintf(
         stderr,
         "usage: %s [image.bin] [--gamedir=DIR] [--install-zip=FILE] [--script=FILE] "
-        "[--call-log=FILE] [--frames=N] [--fps=N] [--time=HH:MM] [--no-port-additions] "
+        "[--call-log=FILE] [--frames=N] [--fps=N] [--time=HH:MM] [--battery=0..100] "
+        "[--no-port-additions] "
         "[--render-scale=1..8] [--render-threads=N] "
         "[--trace-entry=ADDR,...] [--dump-entry=ADDR:START:BYTES] [--dump-frame=START:BYTES]\n",
         program);
@@ -120,7 +131,7 @@ Options parse_options(int argc, char** argv) {
     const std::pair<const char*, std::string*> text_flags[] = {
         {"--gamedir=", &options.game_dir},       {"--script=", &options.script_path},
         {"--call-log=", &options.call_log_path}, {"--install-zip=", &options.install_zip},
-        {"--time=", &options.fixed_time},
+        {"--time=", &options.fixed_time},        {"--battery=", &options.fixed_battery},
     };
     const std::pair<const char*, unsigned*> number_flags[] = {
         {"--frames=", &options.frame_limit},
@@ -562,6 +573,19 @@ int run(Options options) {
             return EXIT_FAILURE;
         }
         eapp::set_fixed_host_time(hour, minute);
+    }
+    if (!options.fixed_battery.empty()) {
+        // The gauge is drawn in the status bar beside the clock, so a run that pins one and not
+        // the other is still not reproducible — two machines at different charges draw different
+        // pictures. See framework/device.h.
+        char* end = nullptr;
+        const long percent = std::strtol(options.fixed_battery.c_str(), &end, 10);
+        if (end == options.fixed_battery.c_str() || *end != '\0' || percent < 0 || percent > 100) {
+            std::fprintf(stderr, "--battery wants 0..100, not %s\n",
+                         options.fixed_battery.c_str());
+            return EXIT_FAILURE;
+        }
+        eapp::set_fixed_host_battery(static_cast<int>(percent));
     }
 
     boot_stage("game files found");

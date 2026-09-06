@@ -24,9 +24,10 @@ cd "$here"
 decomp=build/minigolf-headless
 recomp=build-recomp/minigolf-headless
 script="tests/scripts/$case_name.script"
-: "${GAME_DIR:=$here/../../../20 iPod games/Games_RO/88888}"
+. "$here/tests/game-dir.sh"
+resolve_game_dir
 
-for required in "$decomp" "$script" "$GAME_DIR/Executables/Minigolf_1_1_2563296.bin"; do
+for required in "$decomp" "$script" "$GAME_DIR/$GAME_IMAGE_PATH"; do
     if [ ! -e "$required" ]; then
         echo "vs-recomp.sh: missing $required (set GAME_DIR to your copy of the game)" >&2
         exit 2
@@ -45,13 +46,13 @@ run() {
     copy=$2
     log=$3
     shift 3
-    if [ ! -f "$copy/Executables/Minigolf_1_1_2563296.bin" ]; then
+    if [ ! -f "$copy/$GAME_IMAGE_PATH" ]; then
         rm -rf "$copy"
         cp -R "$GAME_DIR" "$copy"
     fi
     find "$copy" -name '*.sav' -delete
     rm -f "$log"
-    "$binary" "$copy/Executables/Minigolf_1_1_2563296.bin" --gamedir="$copy" --script="$script" \
+    "$binary" "$copy/$GAME_IMAGE_PATH" --gamedir="$copy" --script="$script" \
         --call-log="$log" --frames="$frames" --time=07:53 "$@" > "$log.stdout" 2>&1 ||
         echo "vs-recomp.sh: $binary exited with status $? (see $log.stdout)"
 }

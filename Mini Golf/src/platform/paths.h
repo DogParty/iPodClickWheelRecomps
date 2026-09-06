@@ -14,4 +14,11 @@ namespace minigolf::platform {
 // MINIGOLF_DATA_DIR in the environment overrides all three.
 std::string data_directory();
 
+// Say where that directory is, for a platform whose answer this file cannot work out on its
+// own. Android is the case: an app may write only inside storage the system hands it, and only
+// the app can ask for it, so the platform passes it here from its constructor — before anything
+// reads it (runtime/main.cpp creates the platform first). The environment still wins, so a
+// build driven from a command line can still be pointed somewhere else.
+void set_data_directory(const std::string& directory);
+
 }  // namespace minigolf::platform

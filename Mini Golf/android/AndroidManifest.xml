@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Android app, which is SDL's own activity and nothing else.
+
+     There is no Java in this project. SDL ships org.libsdl.app.SDLActivity compiled in its .aar,
+     and its getLibraries() is hardcoded to load "SDL3" and then "main", then call SDL_main in
+     the second — there is no manifest key for that list, the only way to change it is a Java
+     subclass. So the port simply *is* `libmain.so`, which is what the title's CMakeLists.txt
+     renames the Android build to, and no Java has to be written or compiled at all.
+
+     Landscape and locked: the picture is a 4:3 window on a device held in two hands, and the
+     game has no portrait layout to rotate into. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="org.ipodrecomp.minigolf"
+          android:versionCode="1"
+          android:versionName="1.0.0">
+
+    <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="35" />
+
+    <!-- A gamepad is how this is meant to be played, but a touchscreen-only device is not shut
+         out of installing it, so neither is "required". -->
+    <uses-feature android:name="android.hardware.gamepad" android:required="false" />
+    <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
+
+    <!-- No title bar and no status bar. Without a theme the framework's default gives the
+         activity both, and they crop the top of a picture that is meant to fill the screen.
+         Theme.NoTitleBar.Fullscreen is the framework's own, so this needs no resources of the
+         app's — which is what keeps the APK free of a compiled resource table. -->
+    <application android:label="iPod Mini Golf"
+                 android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
+                 android:hardwareAccelerated="true"
+                 android:allowBackup="true"
+                 android:extractNativeLibs="true">
+
+        <activity android:name="org.libsdl.app.SDLActivity"
+                  android:label="iPod Mini Golf"
+                  android:exported="true"
+                  android:alwaysRetainTaskState="true"
+                  android:launchMode="singleInstance"
+                  android:screenOrientation="sensorLandscape"
+                  android:configChanges="layoutDirection|locale|orientation|uiMode|screenLayout|screenSize|smallestScreenSize|keyboard|keyboardHidden|navigation">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

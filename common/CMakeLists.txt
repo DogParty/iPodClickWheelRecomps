@@ -24,6 +24,27 @@ add_library(ipod_core STATIC
 )
 target_include_directories(ipod_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
+# One rounding, on every machine.
+#
+# Clang on ARM — Apple silicon, Android, the Switch — fuses a multiply and an add into a single
+# instruction that rounds once where two roundings happened before. It is worth about 4% of the
+# frame rate (measured on a Snapdragon 8 Gen 2: 781 frames a second against 752 at the game's own
+# size, and 78 against 75 at four times it, where the game asks for 30) and it changes the
+# answer: about one pixel in five hundred comes out one value different. That is
+# invisible to play and it is enough to stop a frame drawn on one machine from matching a frame
+# drawn on another, which is one of the ways this port is checked — the screenshot hashes in each
+# title's tests/ compare a build against a recording made somewhere else. Turn the contraction
+# off rather than loosen the comparison.
+#
+# It belongs here, and PUBLIC, for two reasons: the software rasteriser is `libeapp/gles.cpp` in
+# this library, which does not inherit the compile options a title sets on its own targets; and
+# every title's own code has to round the way the rasteriser does. MSVC is left alone — it has no
+# switch that means quite this, and on x64 without /arch:AVX2 it emits no fused multiply-add to
+# begin with.
+if(NOT MSVC)
+    target_compile_options(ipod_core PUBLIC -ffp-contract=off)
+endif()
+
 # The rasteriser draws a frame on several threads.
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)

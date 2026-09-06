@@ -22,7 +22,12 @@
 // Sound effects and music both play through SDL audio streams, so both answer to the game's own
 // Volume page (`set_audio_level`). The music is AAC, which SDL does not decode; that is
 // `music_decoder.h`'s job, and it is the only part of the audio that is per-platform.
+#include "gamedata/install.h"
+#include "gamedata/manifest.h"
+#include "ipod/platform/device.h"
+#include "ipod/runtime/fatal.h"
 #include "platform/input_bindings.h"
+#include "platform/paths.h"
 #include "platform/platform.h"
 #include "platform/sdl3/music_decoder.h"
 #include "platform/sdl3/sdl3_gamepad.h"
@@ -31,6 +36,7 @@
 #include <SDL3/SDL.h>
 
 #include <algorithm>
+#include <cstdarg>
 #include <atomic>
 #include <cmath>
 #include <cstdio>
@@ -94,6 +100,22 @@ bool trace_input() {
 bool trace_audio() {
     static const bool on = SDL_getenv("MINIGOLF_TRACE_AUDIO") != nullptr;
     return on;
+}
+
+// Where that goes. A terminal, everywhere there is one; on Android stderr reaches nobody, so it
+// goes to the log `adb logcat` shows — which is where the message saying there was no decoder
+// had been going nowhere all along.
+void say_audio(const char* format, ...) __attribute__((format(printf, 1, 2)));
+void say_audio(const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+#if defined(__ANDROID__)
+    SDL_LogMessageV(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO, format, args);
+#else
+    std::vfprintf(stderr, format, args);
+    std::fputc('\n', stderr);
+#endif
+    va_end(args);
 }
 constexpr size_t VOICE_LIMIT = 4;                 // the device's sound-effect polyphony
 constexpr Uint64 TITLE_REFRESH_NS = 500'000'000;  // how often the frame rate in the title updates
@@ -231,7 +253,7 @@ public:
         if (!music_decoding_supported()) {
             if (!warned_) {
                 warned_ = true;
-                std::fprintf(stderr, "music: no decoder in this build (wanted %s)\n", path.c_str());
+                say_audio("music: no decoder in this build (wanted %s)", path.c_str());
             }
             return;
         }
@@ -240,7 +262,7 @@ public:
             return;  // the decoder has said why
         }
         if (trace_audio()) {
-            std::fprintf(stderr, "audio: music %s (%d Hz, %d ch)%s\n", path.c_str(), spec.freq,
+            say_audio("audio: music %s (%d Hz, %d ch)%s", path.c_str(), spec.freq,
                          spec.channels, repeat ? ", repeating" : "");
         }
         repeat_ = repeat;
@@ -255,7 +277,7 @@ public:
     // Silence it until another track is asked for. What Music: OFF does.
     void stop() {
         if (trace_audio() && decoder_.is_open()) {
-            std::fprintf(stderr, "audio: music stopped\n");
+            say_audio("audio: music stopped");
         }
         if (stream_ != nullptr) {
             SDL_ClearAudioStream(stream_);
@@ -277,7 +299,7 @@ public:
                     return;
                 }
                 if (trace_audio()) {
-                    std::fprintf(stderr, "audio: music looped\n");
+                    say_audio("audio: music looped");
                 }
                 decoder_.restart();
                 // A track that decodes to nothing at all would spin here for ever.
@@ -319,7 +341,7 @@ private:
             stream_ = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, nullptr,
                                                 nullptr);
             if (stream_ == nullptr) {
-                std::fprintf(stderr, "music: no audio device: %s\n", SDL_GetError());
+                say_audio("music: no audio device: %s", SDL_GetError());
                 return false;
             }
             (void)SDL_SetAudioStreamGain(stream_, gain_);
@@ -374,13 +396,44 @@ public:
         // The rate this run was started at is the default until a saved one is read over it
         // (runtime/main.cpp).
         settings().frame_rate = frames_per_second;
+#if defined(__ANDROID__)
+        // Two things this platform has to settle before anything else runs.
+        //
+        // Where the game's files and saves may go: an Android app writes only inside storage the
+        // system hands it, which no path in platform/paths.cpp could have worked out. External
+        // storage rather than internal, because a player has to be able to put the game's own
+        // folder there (`choose_file` below says how).
+        if (const char* storage = SDL_GetAndroidExternalStoragePath(); storage != nullptr) {
+            set_data_directory(storage);
+        }
+        // And where a fatal message goes. stderr on Android reaches nobody; the log does, and
+        // it is what `adb logcat` shows.
+        ipod::set_fatal_handler([](const char* message) {
+            SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "%s", message);
+        });
+        // The charge, which the shared core cannot ask for here: an app is refused
+        // /sys/class/power_supply, and SDL is not linked into that library. SDL fills `percent`
+        // with -1 when it cannot tell, which is exactly what the seam wants for "cannot say".
+        ipod::platform::set_battery_reader([]() -> int {
+            int percent = -1;
+            (void)SDL_GetPowerInfo(nullptr, &percent);
+            return percent;
+        });
+#endif
         if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMEPAD)) {
             std::fprintf(stderr, "SDL_Init failed: %s\n", SDL_GetError());
             return;
         }
+        // Android has no windows to resize and no desktop to sit on: the game is the screen, and
+        // asking for fullscreen is also what puts the system's status and navigation bars away.
+        // Without it they keep their strips of a display the picture was going to fill.
+        SDL_WindowFlags window_flags = SDL_WINDOW_RESIZABLE;
+#if defined(__ANDROID__)
+        window_flags |= SDL_WINDOW_FULLSCREEN;
+#endif
         if (!SDL_CreateWindowAndRenderer(title, static_cast<int>(SCREEN_WIDTH) * WINDOW_SCALE,
                                          static_cast<int>(SCREEN_HEIGHT) * WINDOW_SCALE,
-                                         SDL_WINDOW_RESIZABLE, &window_, &renderer_)) {
+                                         window_flags, &window_, &renderer_)) {
             std::fprintf(stderr, "cannot create window: %s\n", SDL_GetError());
             return;
         }
@@ -405,7 +458,14 @@ public:
         gamepads_.open_all();
         // Typing is how a name gets entered on a machine with a keyboard; spelling a name out
         // on the wheel keys still works.
+        //
+        // Not on Android, where asking for text input raises the on-screen keyboard and it
+        // covers half the game — including the row of letters it would be helping you pick.
+        // There is no hardware keyboard on a handheld to fall back to, so the wheel is the way
+        // a name is spelled there, exactly as it is on the Switch (`text_input_supported`).
+#if !defined(__ANDROID__)
         SDL_StartTextInput(window_);
+#endif
         // The window keeps the screen's shape however it is dragged, so the picture fills it and
         // there is nothing to letterbox. - and = step it through whole multiples of 320x240.
         const float shape = static_cast<float>(SCREEN_WIDTH) / static_cast<float>(SCREEN_HEIGHT);
@@ -576,7 +636,15 @@ public:
         service_audio();
     }
 
-    [[nodiscard]] bool text_input_supported() const override { return true; }
+    // See the constructor: everywhere with a keyboard, yes; on Android the only keyboard is one
+    // drawn over the game, so the wheel spells the name instead.
+    [[nodiscard]] bool text_input_supported() const override {
+#if defined(__ANDROID__)
+        return false;
+#else
+        return true;
+#endif
+    }
 
     void present(const uint8_t* rgb, unsigned width, unsigned height) override {
         if (renderer_ == nullptr || !ensure_texture(width, height)) {
@@ -640,7 +708,7 @@ public:
 
     void play_sound(const std::string& wav_path, bool looping) override {
         if (trace_audio()) {
-            std::fprintf(stderr, "audio: sound %s%s\n", wav_path.c_str(),
+            say_audio("audio: sound %s%s", wav_path.c_str(),
                          looping ? " (looping)" : "");
         }
         const Clip* clip = clip_for(wav_path);
@@ -684,7 +752,7 @@ public:
     void set_audio_level(unsigned level) override {
         gain_ = static_cast<float>(level) / static_cast<float>(AUDIO_LEVEL_MAX);
         if (trace_audio()) {
-            std::fprintf(stderr, "audio: volume %u/%u (gain %.2f)\n", level, AUDIO_LEVEL_MAX,
+            say_audio("audio: volume %u/%u (gain %.2f)", level, AUDIO_LEVEL_MAX,
                          static_cast<double>(gain_));
         }
         for (Voice& voice : voices_) {
@@ -699,6 +767,33 @@ public:
     // so whichever finishes last releases it.
     bool choose_file(const std::string& prompt, const std::string& extension,
                      std::string& chosen_path) override {
+#if defined(__ANDROID__)
+        // No file browser here, on purpose. This is a handheld with a game controller and no
+        // pointer, and the zip a player would have to find is not something the system's picker
+        // is any good at reaching. So do what the Switch build does (platform/switch/): say
+        // where the game's own folder has to be put, and let them put it there.
+        //
+        // What is wrong comes from the check itself rather than a guess, because "copy the
+        // files" is no help at all when the files are there and one of them is damaged.
+        const std::string game_dir =
+            data_directory() + "/" + gamedata::GAME_DIRECTORY_NAME;
+        std::string why = "they are not there";
+        (void)gamedata::verify_installed(game_dir, why);
+        // Both names are offered because both are accepted (gamedata/manifest.h): the folder is
+        // `88888` on the iPod and carries the game's own name in the copy most people have, and
+        // being told to rename it when the game would have taken it either way is a waste of
+        // somebody's evening.
+        const std::string message =
+            prompt + "\n\nThe game's own files cannot be used:\n    " + why +
+            "\n\nPut the game's folder — named either \"" + gamedata::GAME_DIRECTORY_NAME +
+            "\" or \"" + gamedata::GAME_DIRECTORY_ALIAS + "\" — in\n    " + data_directory() +
+            "\n\nthen start this again.";
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s", message.c_str());
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Mini Golf", message.c_str(), window_);
+        (void)extension;
+        (void)chosen_path;
+        return false;
+#else
         const auto answer = std::make_shared<Answer>();
         const auto on_chosen = [](void* userdata, const char* const* files, int /*filter*/) {
             // Adopt the reference `choose_file` handed over, and drop it on the way out.
@@ -735,6 +830,7 @@ public:
         }
         chosen_path = answer->path;
         return !chosen_path.empty();
+#endif
     }
 
 private:

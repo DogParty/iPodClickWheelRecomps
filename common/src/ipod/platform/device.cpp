@@ -86,6 +86,14 @@ int host_battery_percent() {
     }
     return status.BatteryLifePercent;
 }
+#elif defined(__ANDROID__)
+// Android is Linux, but an app is refused /sys/class/power_supply — on a device that enforces,
+// with a denial; on one that does not, with a line in the log for every frame that asks. The
+// charge comes from the platform's reader instead (device.h, `set_battery_reader`), and this
+// says "cannot say" for a build that installed none, such as the on-device test tool.
+int host_battery_percent() {
+    return -1;
+}
 #else
 // Linux and the BSDs expose it as a file. The first battery that reports a capacity answers.
 int host_battery_percent() {
@@ -116,6 +124,12 @@ int host_battery_percent() {
 }
 #endif
 
+// What `set_battery_reader` was given, if anything.
+int (*&battery_reader())() {
+    static int (*reader)() = nullptr;
+    return reader;
+}
+
 }  // namespace
 
 LocalTime local_time_now() {
@@ -145,7 +159,8 @@ unsigned battery_percent() {
     if (pinned().battery >= 0) {
         return static_cast<unsigned>(pinned().battery);
     }
-    const int host = host_battery_percent();
+    // The platform's own reader where one was installed, and this file's otherwise.
+    const int host = battery_reader() != nullptr ? battery_reader()() : host_battery_percent();
     // No battery is not an error: a desktop is a device that is always on the charger, and that
     // is what a full gauge means. Reporting 0 there would put every game into its low-battery
     // behaviour on a machine that has no such state.
@@ -154,6 +169,10 @@ unsigned battery_percent() {
 
 void set_fixed_battery_percent(int percent) {
     pinned().battery = percent >= 0 && percent <= 100 ? percent : -1;
+}
+
+void set_battery_reader(int (*reader)()) {
+    battery_reader() = reader;
 }
 
 }  // namespace ipod::platform

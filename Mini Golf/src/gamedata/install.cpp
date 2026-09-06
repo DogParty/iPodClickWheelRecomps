@@ -106,23 +106,53 @@ bool install_from_zip(const std::string& zip_path, const std::string& game_dir, 
     return true;
 }
 
+namespace {
+
+// Where the game's files already are, under either of the names manifest.h accepts. Empty when
+// neither holds a good copy, with `why` saying what was wrong with the one the game asks for.
+std::string installed_game_dir(const std::string& data_dir, std::string& why) {
+    // The numbered name first: it is what an install writes, so a folder that got there the
+    // ordinary way is found without looking at the other one at all.
+    for (const char* name : {GAME_DIRECTORY_NAME, GAME_DIRECTORY_ALIAS}) {
+        const std::string candidate = (fs::path(data_dir) / name).string();
+        std::string reason;
+        if (verify_installed(candidate, reason)) {
+            return candidate;
+        }
+        // What is wrong with the *numbered* one is what a player wants to hear: it is the one
+        // the game asks for, and the alias is a courtesy. Saying "there is no Mini Golf folder"
+        // to somebody whose 88888 folder is a file short would send them the wrong way.
+        if (why.empty()) {
+            why = reason;
+        }
+    }
+    return "";
+}
+
+}  // namespace
+
 std::string locate_game(platform::Platform& platform, const std::string& data_dir) {
-    const std::string game_dir = (fs::path(data_dir) / GAME_DIRECTORY_NAME).string();
     std::string why;
+    const std::string found = installed_game_dir(data_dir, why);
+    if (!found.empty()) {
+        return found;
+    }
+    // Nothing usable is there, so ask. An install always writes the numbered name, whatever the
+    // zip called it.
+    const std::string game_dir = (fs::path(data_dir) / GAME_DIRECTORY_NAME).string();
     std::string message = "Choose the zip of the game's folder (8888.zip)";
-    while (!verify_installed(game_dir, why)) {
+    for (;;) {
         std::fprintf(stderr, "game data: %s — %s\n", game_dir.c_str(), why.c_str());
         std::string zip_path;
         if (!platform.choose_file(message, "zip", zip_path)) {
             return "";
         }
-        if (!install_from_zip(zip_path, game_dir, why)) {
-            std::fprintf(stderr, "game data: %s: %s\n", zip_path.c_str(), why.c_str());
-            message =
-                "That zip is not the game (" + why + ") — choose the zip of the game's folder";
+        if (install_from_zip(zip_path, game_dir, why)) {
+            return game_dir;
         }
+        std::fprintf(stderr, "game data: %s: %s\n", zip_path.c_str(), why.c_str());
+        message = "That zip is not the game (" + why + ") — choose the zip of the game's folder";
     }
-    return game_dir;
 }
 
 }  // namespace minigolf::gamedata

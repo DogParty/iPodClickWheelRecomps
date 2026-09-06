@@ -3,6 +3,10 @@
 # it goes on this platform.
 #
 #   artifact-readme.sh <display-name> <version> <platform> <game-folder> <data-dir> <exe>
+#                      <linux-data-dir>
+#
+# The last is separate because Linux spells the directory differently from macOS and
+# Windows, and not predictably — see common/tools/titles.txt.
 #
 # Written into every artifact by release.sh. Every one of these builds needs the game's own
 # files, which are the player's copy off their own iPod and are in no artifact, so the first
@@ -11,6 +15,7 @@
 set -eu
 
 name=${1:?}; version=${2:?}; platform=${3:?}; folder=${4:?}; datadir=${5:?}; exe=${6:?}
+linuxdir=${7:-$exe}
 
 cat <<HEADER
 $name $version — an iPod game, recompiled
@@ -89,6 +94,74 @@ unknown publisher. "More info" then "Run anyway" starts it.
 
 BODY
     ;;
+linux)
+    cat <<BODY
+INSTALLING
+----------
+
+1. Put "$exe" wherever you like and make sure it is executable (chmod +x $exe).
+2. Install SDL3 and zlib from your distribution if you haven't: they are not in here, because a
+   Linux program takes its libraries from the machine it runs on. On Fedora that is
+   \`sudo dnf install SDL3 zlib-ng-compat\`; on Debian and Ubuntu, \`sudo apt install libsdl3-0 zlib1g\`.
+3. Run it. The first launch asks for the $folder folder (or a zip of it) with the ordinary file
+   browser, checks every file in it against the sizes and checksums the game shipped with, and
+   copies it to
+
+       \$XDG_DATA_HOME/$linuxdir/$folder, or ~/.local/share/$linuxdir/$folder
+
+   from where it is read every time after. Your saves go beside it.
+
+This build was compiled against glibc ${GLIBC_FLOOR:-unknown} and needs that version or newer —
+\`ldd --version\` says what you have. If yours is older, build from source; it is a plain
+\`cmake -B build && cmake --build build\`, and the source release has the instructions.
+
+There is no settings window on Linux — that one is a Cocoa window on macOS and a Win32 one on
+Windows, and nobody has written a third — so the frame rate, the picture scaling and the key
+bindings come from the settings file and the defaults. The game's own Options and Cheats screens
+work as they do everywhere. There is no background music either; the sound effects are all here.
+
+BODY
+    ;;
+android)
+    cat <<BODY
+INSTALLING
+----------
+
+An APK for a 64-bit Android device, meant for a handheld with a real gamepad.
+
+1. Allow installing from wherever you are putting it (your file manager will offer), then open
+   "$exe.apk" on the device. Or, from a computer with the Android platform-tools:
+
+       adb install $exe.apk
+
+2. Copy the $folder folder onto the device, at exactly
+
+       /sdcard/Android/data/org.ipodrecomp.$exe/files/$folder
+
+   There is no file browser in this build — a folder of a hundred-odd files is not something
+   Android's document picker hands over well — so it has to be in that place before you start.
+   If it is missing the game says so on screen, with the path, and with what is actually wrong
+   if the files are there but damaged.
+
+   Since Android 11 \`adb push\` cannot always write into Android/data. If it refuses:
+
+       adb push $folder /data/local/tmp/
+       adb shell "mkdir -p /sdcard/Android/data/org.ipodrecomp.$exe/files"
+       adb shell "cp -r /data/local/tmp/$folder /sdcard/Android/data/org.ipodrecomp.$exe/files/"
+
+3. Launch it from the app list. Saves and settings are kept beside the game's files.
+
+The D-pad turns the click wheel, A selects, B is Menu. There is no settings window and no
+a name is spelled out on the wheel rather than with the on-screen keyboard. The background
+music plays, decoded by the device's own codec. Holding B leaves the game, as holding Menu left it on the iPod.
+
+This APK is signed with a debug key, which is enough to install and play and not enough to
+publish. Android may warn you about that; it is the same warning any unsigned or
+self-signed app gets. If you ever install a copy signed with a different key you will have to
+uninstall this one first.
+
+BODY
+    ;;
 switch)
     cat <<BODY
 INSTALLING
@@ -125,6 +198,18 @@ WHAT ELSE IS IN HERE
   COPYING.txt        the GNU General Public License, version 3, which this program is under.
   SDL3-LICENSE.txt   SDL3's licence. The program uses SDL for its window, input and sound, and
                      that licence asks to travel with it.
+FOOTER
+
+# Only the Android build carries its C++ standard library inside the program; every other
+# platform's comes from the system it runs on, and so is not in the download to be licensed.
+if [ "$platform" = android ]; then
+    cat <<'EXTRA'
+  LIBCXX-LICENSE.txt libc++'s licence. This build links the C++ standard library into the
+                     program rather than loading the device's, so a copy of it is in here.
+EXTRA
+fi
+
+cat <<'FOOTER'
 
 LICENCE
 -------

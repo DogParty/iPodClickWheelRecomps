@@ -32,11 +32,21 @@ objdump.txt
 NEW-RECOMP.md
 
 # The games themselves, wherever a copy lands.
+#
+# `*.bin` and `*.eapp` name the executable, and the executable is the smallest part of a game:
+# the rest is courses, artwork, sound and music, under names like `c00` and `a0.m4a` that no
+# pattern here could pick out without also matching something of the project's own. So the two
+# folders a copy arrives in are named outright, as they are spelled by the preservation project
+# that people get them from, along with iTunes' own package for a single title.
 *.bin
 *.eapp
+*.ipg
 
-# Original game artwork, packaged into the Switch port by the person building it.
+# Original game artwork, packaged into the Switch and Android ports by the person building it.
 Mini Golf/src/platform/switch/icon.jpg
+Mini Golf/android/icon.png
+Mini Golf/android/icon-foreground.png
+Mini Golf/android/icon-background.png
 
 # Save files written by play sessions.
 *.sav

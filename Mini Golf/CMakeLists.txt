@@ -24,12 +24,17 @@ cmake_minimum_required(VERSION 3.21)
 if(APPLE AND NOT CMAKE_OSX_DEPLOYMENT_TARGET)
     set(CMAKE_OSX_DEPLOYMENT_TARGET 11.0 CACHE STRING "The oldest macOS this build runs on")
 endif()
-project(minigolf VERSION 1.0.0 LANGUAGES CXX)
+project(minigolf VERSION 0.2.0 LANGUAGES CXX)
 if(APPLE)
     enable_language(OBJCXX)  # the SDL build's menu bar (src/platform/sdl3/macos_menu.mm)
 endif()
 if(WIN32)
     enable_language(RC)  # the manifest that gives the settings window its controls' modern look
+endif()
+if(ANDROID)
+    # SDL3's CMake package works out the target CPU by compiling a small .c file, which it can
+    # only do if C is a language this project has enabled.
+    enable_language(C)
 endif()
 
 set(CMAKE_CXX_STANDARD 17)
@@ -257,12 +262,20 @@ function(minigolf_link_core NAME)
     endif()
 endfunction()
 
+# Pass SHARED to get a shared library rather than a program. Android is why: there a game is
+# loaded from Java by SDL's activity, which calls SDL_main inside a .so, so the windowed build is
+# `libminigolf.so` and not an executable at all. The headless build stays a real program
+# everywhere, Android included, where it is what runs the tests on the device.
 function(minigolf_add_executable NAME PLATFORM_SOURCES)
     if(NOT EXISTS ${MAIN_SOURCE} OR NOT MINIGOLF_CORE_LIBS)
         message(STATUS "${NAME}: runtime not written yet — target skipped")
         return()
     endif()
-    add_executable(${NAME} ${MAIN_SOURCE} ${PLATFORM_SOURCES})
+    if("SHARED" IN_LIST ARGN)
+        add_library(${NAME} SHARED ${MAIN_SOURCE} ${PLATFORM_SOURCES})
+    else()
+        add_executable(${NAME} ${MAIN_SOURCE} ${PLATFORM_SOURCES})
+    endif()
     minigolf_link_core(${NAME})
 endfunction()
 
@@ -275,17 +288,52 @@ endif()
 if(MINIGOLF_SDL3 AND SDL3_SOURCES)
     # SDL3 ships a CMake package; fall back to pkg-config for distributions that do not install
     # it (and so that a Windows or console toolchain, which has no pkg-config, still configures).
+    #
+    # The fallback is for *this* machine only. pkg-config answers about the host, so a
+    # cross-build that reached it would quietly link the SDL belonging to the machine doing the
+    # building — on a Linux box cross-compiling for Android, an x86_64 library for an arm64
+    # program, which fails at the link if you are lucky and at run time if you are not. When
+    # cross-compiling, the CMake package is the only answer, and not finding it is an error
+    # worth stopping for.
     find_package(SDL3 QUIET CONFIG)
     if(TARGET SDL3::SDL3)
         set(MINIGOLF_SDL3_TARGET SDL3::SDL3)
+    elseif(CMAKE_CROSSCOMPILING)
+        message(FATAL_ERROR
+            "no SDL3 CMake package for this target.\n"
+            "A cross-build cannot use the host's pkg-config: it describes the machine doing the "
+            "building, not the one being built for. Point SDL3_DIR at an SDL3 built for this "
+            "target. SDL's Android release is an .aar, which is also a Python script that "
+            "unpacks itself into an ordinary prefix:\n"
+            "    python3 SDL3-<version>.aar -o <prefix>\n"
+            "then configure with -DSDL3_DIR=<prefix>/lib/cmake/SDL3.")
     else()
         find_package(PkgConfig REQUIRED)
         pkg_check_modules(SDL3 REQUIRED IMPORTED_TARGET sdl3)
         set(MINIGOLF_SDL3_TARGET PkgConfig::SDL3)
     endif()
-    minigolf_add_executable(minigolf "${SDL3_SOURCES}")
+    if(ANDROID)
+        minigolf_add_executable(minigolf "${SDL3_SOURCES}" SHARED)
+        if(TARGET minigolf)
+            # SDL's own activity (org.libsdl.app.SDLActivity, in the .aar) loads "SDL3" and then
+            # "main", and calls SDL_main in the second. Being that library is what lets the app
+            # ship no Java of its own — no subclass to write, nothing to compile — so the file is
+            # named for whatever loads it rather than for the game inside it.
+            set_target_properties(minigolf PROPERTIES OUTPUT_NAME main)
+            # The NDK's media library, for the AAC decoder the music goes through
+            # (common/src/ipod/platform/sdl3/music_decoder.cpp). It is the system's own codec,
+            # the same bargain macOS and Windows make, and it ships with every Android since 5.0.
+            target_link_libraries(minigolf PRIVATE mediandk)
+        endif()
+    else()
+        minigolf_add_executable(minigolf "${SDL3_SOURCES}")
+    endif()
     if(TARGET minigolf)
         target_link_libraries(minigolf PRIVATE ${MINIGOLF_SDL3_TARGET})
+        # Where the program starts. On Android that is SDL_main rather than main, and
+        # SDL_main.h — included by src/runtime/main.cpp under this name — is what renames it.
+        # The headless build compiles the same file without this and keeps a plain main.
+        target_compile_definitions(minigolf PRIVATE MINIGOLF_SDL3_MAIN)
         if(APPLE)
             # Cocoa for the settings window; AudioToolbox to decode the AAC music, which SDL
             # does not (src/platform/sdl3/music_decoder.cpp). Both are system frameworks.

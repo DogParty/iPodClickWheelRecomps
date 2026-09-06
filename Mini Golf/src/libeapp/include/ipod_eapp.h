@@ -156,6 +156,12 @@ void set_game_directory(const std::string& path);
 // scripted run draws the same clock digits whenever it is replayed.
 void set_fixed_host_time(int hour, int minute);
 
+// Make the battery report this charge (0..100) instead of the real one, for the same reason.
+// A run that compares its picture against another machine's needs both pinned: the status bar
+// draws the gauge, so a frame taken on a laptop at 80% is not the frame taken on one at 74%.
+// Outside 0..100 puts the host's own charge back.
+void set_fixed_host_battery(int percent);
+
 // Report the clock and the battery as the *emulator's* stubs did — an hour already folded to 12,
 // a call that answers 0, a charge pinned full — which is what every recording in tests/expected/
 // was made against. `--emulator-firmware` asks for it; a real run wants the truth.

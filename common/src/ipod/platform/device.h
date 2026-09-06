@@ -14,6 +14,12 @@
 // platforms that matter each have one. `device.cpp` has an implementation per platform and a
 // fallback that says "full" for a machine with no battery to report — a desktop, or a platform
 // nobody has written the call for yet.
+//
+// **And why there is a seam.** Some platforms will not answer this library directly. Android is
+// the case: an app there is refused `/sys/class/power_supply`, and the charge is the system's to
+// hand over rather than a file to read. Asking for it needs SDL, which this library deliberately
+// does not link (../../../common/CMakeLists.txt), so the platform layer installs a reader
+// instead — `set_battery_reader` below.
 #pragma once
 
 namespace ipod::platform {
@@ -44,5 +50,11 @@ void set_fixed_local_time(int hour, int minute);
 
 // Pin the charge, for a run that has to be reproducible. Outside 0..100 puts the host's back.
 void set_fixed_battery_percent(int percent);
+
+// Answer the charge from somewhere this file cannot reach. `reader` returns 0..100, or -1 for
+// "cannot say" — the same answer the built-in readers give, and it lands on the same full-gauge
+// fallback. Installed by a platform that has to (see above) and by nobody else; nullptr puts
+// this file's own reader back. A pinned charge still wins over both.
+void set_battery_reader(int (*reader)());
 
 }  // namespace ipod::platform

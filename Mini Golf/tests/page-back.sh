@@ -17,14 +17,15 @@ set -eu
 binary=${1:-build/minigolf-headless}
 here=$(cd "$(dirname "$0")/.." && pwd)
 script="$here/tests/scripts/page-back.script"
-: "${GAME_DIR:=$here/../../../20 iPod games/Games_RO/88888}"
-if [ ! -f "$binary" ] || [ ! -f "$script" ] || [ ! -f "$GAME_DIR/Executables/Minigolf_1_1_2563296.bin" ]; then
+. "$here/tests/game-dir.sh"
+resolve_game_dir
+if [ ! -f "$binary" ] || [ ! -f "$script" ] || [ ! -f "$GAME_DIR/$GAME_IMAGE_PATH" ]; then
     echo "page-back.sh: missing the game or the build (set GAME_DIR to your copy)" >&2
     exit 2
 fi
 
 copy="$here/build/game-page-back"
-if [ ! -f "$copy/Executables/Minigolf_1_1_2563296.bin" ]; then
+if [ ! -f "$copy/$GAME_IMAGE_PATH" ]; then
     rm -rf "$copy"
     cp -R "$GAME_DIR" "$copy"
 fi
@@ -33,7 +34,7 @@ find "$copy" -name '*.sav' -delete
 # page-back.script opens the Statistics page, screenshots it at 3000, presses Menu at 3200, and
 # screenshots again at 3800 and 4400.
 log="$here/build/page-back.stdout"
-"$binary" "$copy/Executables/Minigolf_1_1_2563296.bin" --gamedir="$copy" --script="$script" \
+"$binary" "$copy/$GAME_IMAGE_PATH" --gamedir="$copy" --script="$script" \
     --frames=4600 --time=07:53 > "$log" 2>&1 ||
     { echo "page-back.sh: the game exited with status $? (see $log)" >&2; exit 1; }
 

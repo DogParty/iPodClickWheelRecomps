@@ -18,6 +18,12 @@ extern const size_t GAME_MANIFEST_SIZE;
 
 // The game directory's name on the iPod, and the image inside it.
 constexpr const char* GAME_DIRECTORY_NAME = "88888";
+// And what the same folder is called in the copy people actually get hold of: iTunes packaged
+// each game as an `.ipg`, which is a zip with the game's *display* name at the top rather than
+// its number. Somebody carrying the folder across by hand — which is the only way to do it on a
+// handheld — has this one, and renaming it is a step that is easy to forget and, from inside the
+// game, indistinguishable from not having the files at all. So both names are looked for.
+constexpr const char* GAME_DIRECTORY_ALIAS = "Mini Golf";
 constexpr const char* GAME_IMAGE_PATH = "Executables/Minigolf_1_1_2563296.bin";
 
 }  // namespace minigolf::gamedata

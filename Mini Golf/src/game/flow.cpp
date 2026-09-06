@@ -21,6 +21,7 @@
 #include "framework/device.h"
 #include "game_state.h"
 #include "hole_load.h"
+#include "host_text.h"
 #include "hole_tick.h"
 #include "input.h"
 #include "libc.h"
@@ -226,7 +227,18 @@ struct Flow {
         const uint32_t idle = text_block().idle_ms + milliseconds;
         text_block().idle_ms = idle;
         text_block().frame_count = game_state_block().text[467] + 1;
-        if (static_cast<int32_t>(idle) >= static_cast<int32_t>(IDLE_SUSPEND_MS)) {
+        // Four idle minutes had the iPod put the game away so the device could sleep. Nothing
+        // this runs on now has a battery that needs it, and "put away" here means the program
+        // ends (runtime/main.cpp): a game that closes itself four minutes after you last touched
+        // it, taking an unfinished round with it. Every deliberate way out is untouched — Exit on
+        // the main menu, and Menu held down — so what goes is only the one nobody asked for.
+        //
+        // The timer itself still runs, and the idle notice below with it; it is only the suspend
+        // that is not acted on. The oracles still see the original: they compare against runs
+        // recorded before this port existed, and `port_additions_hidden()` is how every other
+        // deviation steps out of their way (game/host_text.h).
+        if (static_cast<int32_t>(idle) >= static_cast<int32_t>(IDLE_SUSPEND_MS) &&
+            port_additions_hidden()) {
             result = RESULT_SUSPEND;
             idle_suspend_notify(idle);
         } else if (static_cast<int32_t>(idle) >= static_cast<int32_t>(IDLE_NOTICE_MS)) {

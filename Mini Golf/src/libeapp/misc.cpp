@@ -59,6 +59,11 @@ void set_fixed_host_time(int hour, int minute) {
     ipod::platform::set_fixed_local_time(hour, minute);
 }
 
+// And the battery, which the status bar draws beside them.
+void set_fixed_host_battery(int percent) {
+    ipod::platform::set_fixed_battery_percent(percent);
+}
+
 // Answer #12 and #13 as the emulator's stubs did, for the recordings in tests/expected/.
 void set_emulator_device(bool emulator) {
     misc().emulator_device = emulator;
