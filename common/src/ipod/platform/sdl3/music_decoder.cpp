@@ -489,6 +489,11 @@ bool fetch_sample(Track& track, AMediaFormat** format = nullptr) {
         if (index == AMEDIACODEC_INFO_OUTPUT_FORMAT_CHANGED) {
             idle = 0;
             if (format != nullptr) {
+                // A codec may announce more than once. Each announcement is a fresh object the
+                // caller owns, so let go of the one held before taking the newer one.
+                if (*format != nullptr) {
+                    AMediaFormat_delete(*format);
+                }
                 *format = AMediaCodec_getOutputFormat(track.codec);
             }
             continue;
