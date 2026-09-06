@@ -581,8 +581,7 @@ int run(Options options) {
         char* end = nullptr;
         const long percent = std::strtol(options.fixed_battery.c_str(), &end, 10);
         if (end == options.fixed_battery.c_str() || *end != '\0' || percent < 0 || percent > 100) {
-            std::fprintf(stderr, "--battery wants 0..100, not %s\n",
-                         options.fixed_battery.c_str());
+            std::fprintf(stderr, "--battery wants 0..100, not %s\n", options.fixed_battery.c_str());
             return EXIT_FAILURE;
         }
         eapp::set_fixed_host_battery(static_cast<int>(percent));

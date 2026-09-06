@@ -36,9 +36,9 @@
 #include <SDL3/SDL.h>
 
 #include <algorithm>
-#include <cstdarg>
 #include <atomic>
 #include <cmath>
+#include <cstdarg>
 #include <cstdio>
 #include <map>
 #include <memory>
@@ -262,8 +262,8 @@ public:
             return;  // the decoder has said why
         }
         if (trace_audio()) {
-            say_audio("audio: music %s (%d Hz, %d ch)%s", path.c_str(), spec.freq,
-                         spec.channels, repeat ? ", repeating" : "");
+            say_audio("audio: music %s (%d Hz, %d ch)%s", path.c_str(), spec.freq, spec.channels,
+                      repeat ? ", repeating" : "");
         }
         repeat_ = repeat;
         if (!open_stream(spec)) {
@@ -708,8 +708,7 @@ public:
 
     void play_sound(const std::string& wav_path, bool looping) override {
         if (trace_audio()) {
-            say_audio("audio: sound %s%s", wav_path.c_str(),
-                         looping ? " (looping)" : "");
+            say_audio("audio: sound %s%s", wav_path.c_str(), looping ? " (looping)" : "");
         }
         const Clip* clip = clip_for(wav_path);
         if (clip == nullptr) {
@@ -753,7 +752,7 @@ public:
         gain_ = static_cast<float>(level) / static_cast<float>(AUDIO_LEVEL_MAX);
         if (trace_audio()) {
             say_audio("audio: volume %u/%u (gain %.2f)", level, AUDIO_LEVEL_MAX,
-                         static_cast<double>(gain_));
+                      static_cast<double>(gain_));
         }
         for (Voice& voice : voices_) {
             voice.set_gain(gain_);
@@ -775,19 +774,18 @@ public:
         //
         // What is wrong comes from the check itself rather than a guess, because "copy the
         // files" is no help at all when the files are there and one of them is damaged.
-        const std::string game_dir =
-            data_directory() + "/" + gamedata::GAME_DIRECTORY_NAME;
+        const std::string game_dir = data_directory() + "/" + gamedata::GAME_DIRECTORY_NAME;
         std::string why = "they are not there";
         (void)gamedata::verify_installed(game_dir, why);
         // Both names are offered because both are accepted (gamedata/manifest.h): the folder is
         // `88888` on the iPod and carries the game's own name in the copy most people have, and
         // being told to rename it when the game would have taken it either way is a waste of
         // somebody's evening.
-        const std::string message =
-            prompt + "\n\nThe game's own files cannot be used:\n    " + why +
-            "\n\nPut the game's folder — named either \"" + gamedata::GAME_DIRECTORY_NAME +
-            "\" or \"" + gamedata::GAME_DIRECTORY_ALIAS + "\" — in\n    " + data_directory() +
-            "\n\nthen start this again.";
+        const std::string message = prompt + "\n\nThe game's own files cannot be used:\n    " +
+                                    why + "\n\nPut the game's folder — named either \"" +
+                                    gamedata::GAME_DIRECTORY_NAME + "\" or \"" +
+                                    gamedata::GAME_DIRECTORY_ALIAS + "\" — in\n    " +
+                                    data_directory() + "\n\nthen start this again.";
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s", message.c_str());
         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Mini Golf", message.c_str(), window_);
         (void)extension;
